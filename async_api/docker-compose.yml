@@ -1,0 +1,72 @@
+version: '3'
+
+volumes:
+  postgres_data:
+  static_files:
+
+services:
+  web:
+    container_name: web-container
+    build: ./service
+    expose:
+      - "8000"
+    volumes:
+      - static_files:/opt/app/staticfiles
+    depends_on:
+      - db
+    env_file:
+      - ./.env
+
+  db:
+    container_name: database-container
+    image: postgres:13.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+
+  nginx:
+    container_name: nginx-container
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./configs:/etc/nginx/conf.d:ro
+      - ./data:/data/:ro
+      - static_files:/home/app/staticfiles
+    depends_on:
+      - web
+    ports:
+      - 8000:80
+
+  elasticsearch:
+    container_name: elastic-container
+    image: docker.io/elastic/elasticsearch:8.2.3
+    environment:
+      - xpack.security.enabled=false
+      - "discovery.type=single-node"
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
+    restart: on-failure
+    depends_on:
+      - db
+
+  etl:
+    container_name: etl-container
+    build: ./etl
+    env_file:
+      - ./.env
+    depends_on:
+      - elasticsearch
+      - db
+
+  redis:
+    image: redis:6.0.9
+    restart: on-failure
+
+  fastapi:
+    build:
+      context: ./fastapi-solution/
+    expose:
+      - "8000"
+    depends_on:
+      - redis
+      - elasticsearch
