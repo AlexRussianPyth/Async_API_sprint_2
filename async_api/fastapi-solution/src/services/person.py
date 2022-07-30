@@ -1,10 +1,10 @@
 from functools import lru_cache
 
 import json
-from aioredis import Redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
+from db.bases.cache import BaseCacheService
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.models import Person
@@ -13,7 +13,7 @@ from core.config import api_settings, cache_settings
 
 
 class PersonService:
-    def __init__(self, cache_service: Redis, elastic: AsyncElasticsearch):
+    def __init__(self, cache_service: BaseCacheService, elastic: AsyncElasticsearch):
         self.cache_service = cache_service
         self.elastic = elastic
 
@@ -170,7 +170,7 @@ class PersonService:
 
 @lru_cache()
 def get_person_service(
-        cache_service: Redis = Depends(get_redis),
+        cache_service: BaseCacheService = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> PersonService:
     return PersonService(cache_service, elastic)

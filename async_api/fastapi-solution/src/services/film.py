@@ -1,19 +1,19 @@
 from functools import lru_cache
 
 import json
-from aioredis import Redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
 from core.utils import generate_cache_key
 from core.config import cache_settings
 from db.elastic import get_elastic
+from db.bases.cache import BaseCacheService
 from db.redis import get_redis
 from models.models import Film
 
 
 class FilmService:
-    def __init__(self, cache_service: Redis, elastic: AsyncElasticsearch):
+    def __init__(self, cache_service: BaseCacheService, elastic: AsyncElasticsearch):
         self.cache_service = cache_service
         self.elastic = elastic
 
@@ -172,7 +172,7 @@ class FilmService:
 
 @lru_cache()
 def get_film_service(
-        cache_service: Redis = Depends(get_redis),
+        cache_service: BaseCacheService = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> FilmService:
     return FilmService(cache_service, elastic)
