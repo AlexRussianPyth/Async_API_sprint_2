@@ -1,10 +1,10 @@
 from functools import lru_cache
 
 import json
-from aioredis import Redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
+from db.bases.cache import BaseCacheService
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.models import Genre
@@ -15,8 +15,8 @@ from core.config import api_settings, cache_settings
 class GenreService:
     """Класс, который позволяет вернуть данные о жанрах напрямую из Эластика либо опосредованно из Redis"""
 
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
+    def __init__(self, cache_service: BaseCacheService, elastic: AsyncElasticsearch):
+        self.cache_service = cache_service
         self.elastic = elastic
 
     async def get_genres(self, page: int, query: str | None) -> list[Genre] | None:
@@ -83,7 +83,7 @@ class GenreService:
             page=page
         )
 
-        data = await self.redis.get(cache_key)
+        data = await self.cache_service.get(cache_key)
 
         if not data:
             return None
@@ -101,7 +101,7 @@ class GenreService:
 
         data = [chunk.json() for chunk in genres_chunk]
 
-        await self.redis.set(
+        await self.cache_service.set(
             key=cache_key,
             value=json.dumps(data),
             expire=cache_settings.genre_cache_expire_sec
@@ -117,7 +117,7 @@ class GenreService:
 
     async def _get_genre_from_cache(self, genre_id: str) -> Genre | None:
         """Получает объект Жанра по id из Кэша в Рэдис"""
-        data = await self.redis.get(genre_id)
+        data = await self.cache_service.get(genre_id)
         if not data:
             return None
         # pydantic предоставляет удобное API для создания объекта моделей из json
@@ -126,13 +126,13 @@ class GenreService:
 
     async def _put_genre_to_cache(self, genre: Genre):
         """Сохраняет объект Жанра в Кэш Рэдиса"""
-        await self.redis.set(genre.id, genre.json(), expire=cache_settings.genre_cache_expire_sec)
+        await self.cache_service.set(genre.id, genre.json(), expire=cache_settings.genre_cache_expire_sec)
 
 
 @lru_cache()
 def get_genre_service(
-        redis: Redis = Depends(get_redis),
+        cache_service: BaseCacheService = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> GenreService:
     """Функция возвращает синглтон объект GenreService с внедренными зависимостями"""
-    return GenreService(redis, elastic)
+    return GenreService(cache_service, elastic)

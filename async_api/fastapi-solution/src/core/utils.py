@@ -1,5 +1,5 @@
-async def generate_cache_key(index: str, **kwargs) -> str:
-    """Возвращает строку для кеширования на основе аргументов"""
+async def generate_cache_key(index: str, separator: str = "::", **kwargs) -> str:
+    """Возвращает строку для кеширования на основе набора аргументов"""
 
     keys = [index]
 
@@ -8,4 +8,4 @@ async def generate_cache_key(index: str, **kwargs) -> str:
             keys.append(str(arg))
             keys.append(str(kwargs[arg]))
 
-    return "::".join(keys)
+    return separator.join(keys)
