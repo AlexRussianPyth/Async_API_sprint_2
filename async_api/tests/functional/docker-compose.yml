@@ -11,34 +11,35 @@ services:
     ports:
       - 9200:9200
 
-  redis:
-    image: redis:6.0.9
-    restart: on-failure
-    ports:
-      - 6379:6379
+#  redis:
+#    image: redis:6.0.9
+#    restart: on-failure
+#    ports:
+#      - 6379:6379
 
-  fastapi:
-    environment:
-      - REDIS_HOST=redis
-      - ELASTIC_HOST=elasticsearch
+#  fastapi:
+#    environment:
+#      - REDIS_HOST=redis
+#      - ELASTIC_HOST=elasticsearch
+#    build:
+#      context: ../../fastapi-solution/
+#    depends_on:
+#      - redis
+#      - elasticsearch
+#    ports:
+#      - 8000:8000
+
+  tests:
+    container_name: tests-container
     build:
-      context: ../../fastapi-solution/
-    depends_on:
-      - redis
-      - elasticsearch
-    ports:
-      - 8000:8000
-
-
-
-#tests:
-#  ...
-#    entrypoint: >
-#      sh -c "pip install -r /tests/functional/requirements.txt
-#      && python3 /tests/functional/utils/wait_for_es.py
+      context: .
+    entrypoint: >
+      sh -c "pip install --upgrade pip && pip install -r ./requirements.txt &&
+      python3 ./utils/wait_for_es.py && echo 'и только после этого запускаются наши тесты'"
+    env_file:
+      - ../../.env
 #      && python3 /tests/functional/utils/wait_for_redis.py
 #      && pytest /tests/functional/src"
-#  ...
 
 
 # А вот так можно тестировать тот же контейнер, который мы собирали для нашего приложения. Сначала именуем, затем
