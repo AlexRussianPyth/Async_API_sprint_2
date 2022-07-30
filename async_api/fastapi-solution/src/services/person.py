@@ -13,8 +13,8 @@ from core.config import api_settings, cache_settings
 
 
 class PersonService:
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
+    def __init__(self, cache_service: Redis, elastic: AsyncElasticsearch):
+        self.cache_service = cache_service
         self.elastic = elastic
 
     async def get_by_id(self, person_id: str) -> Person | None:
@@ -112,7 +112,7 @@ class PersonService:
             page=page
         )
 
-        data = await self.redis.get(cache_key)
+        data = await self.cache_service.get(cache_key)
 
         if not data:
             return None
@@ -130,7 +130,7 @@ class PersonService:
 
         data = [chunk.json() for chunk in persons_chunk]
 
-        await self.redis.set(
+        await self.cache_service.set(
             key=cache_key,
             value=json.dumps(data),
             expire=cache_settings.person_cache_expire_sec
@@ -155,7 +155,7 @@ class PersonService:
 
     async def _get_person_from_cache(self, person_id: str) -> Person | None:
         # Пытаемся получить данные о человеке из кеша, используя команду get
-        data = await self.redis.get(person_id)
+        data = await self.cache_service.get(person_id)
         if not data:
             return None
 
@@ -165,12 +165,12 @@ class PersonService:
 
     async def _put_person_to_cache(self, person: Person):
         # Сохраняем данные о человеке, используя команду set
-        await self.redis.set(person.id, person.json(), expire=cache_settings.person_cache_expire_sec)
+        await self.cache_service.set(person.id, person.json(), expire=cache_settings.person_cache_expire_sec)
 
 
 @lru_cache()
 def get_person_service(
-        redis: Redis = Depends(get_redis),
+        cache_service: Redis = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> PersonService:
-    return PersonService(redis, elastic)
+    return PersonService(cache_service, elastic)

@@ -13,8 +13,8 @@ from models.models import Film
 
 
 class FilmService:
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
+    def __init__(self, cache_service: Redis, elastic: AsyncElasticsearch):
+        self.cache_service = cache_service
         self.elastic = elastic
 
     # get_by_id возвращает объект фильма. Он опционален, так как фильм может отсутствовать в базе
@@ -127,7 +127,7 @@ class FilmService:
             **kwargs
         )
 
-        data = await self.redis.get(cache_key)
+        data = await self.cache_service.get(cache_key)
         if not data:
             return None
 
@@ -143,7 +143,7 @@ class FilmService:
 
         data = [chunk.json() for chunk in films_chunk]
 
-        await self.redis.set(
+        await self.cache_service.set(
             key=cache_key,
             value=json.dumps(data),
             expire=cache_settings.film_cache_expire_sec
@@ -158,7 +158,7 @@ class FilmService:
         return Film(**doc['_source'])
 
     async def _get_film_from_cache(self, film_id: str) -> Film | None:
-        data = await self.redis.get(film_id)
+        data = await self.cache_service.get(film_id)
         if not data:
             return None
 
@@ -167,12 +167,12 @@ class FilmService:
         return film
 
     async def _put_film_to_cache(self, film: Film) -> None:
-        await self.redis.set(film.id, film.json(), expire=cache_settings.film_cache_expire_sec)
+        await self.cache_service.set(film.id, film.json(), expire=cache_settings.film_cache_expire_sec)
 
 
 @lru_cache()
 def get_film_service(
-        redis: Redis = Depends(get_redis),
+        cache_service: Redis = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> FilmService:
-    return FilmService(redis, elastic)
+    return FilmService(cache_service, elastic)
