@@ -28,6 +28,8 @@ services:
       - elasticsearch
     ports:
       - 8000:8000
+    env_file:
+      - ../../.env
 
   tests:
     container_name: tests-container

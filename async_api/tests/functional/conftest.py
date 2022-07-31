@@ -6,7 +6,7 @@ import aioredis
 from multidict import CIMultiDictProxy
 from elasticsearch import AsyncElasticsearch
 
-from settings import test_settings
+from .settings import test_settings
 
 FASTAPI_URL = test_settings.fastapi_host + test_settings.fastapi_port
 

@@ -79,3 +79,13 @@ services:
       - elasticsearch
     ports:
       - 8002:8000
+
+  tests:
+    container_name: tests-container
+    build:
+      context: ./tests/functional/
+    entrypoint: >
+      sh -c "pip install --upgrade pip && pip install -r ./requirements.txt &&
+      python3 ./utils/wait_for_es.py && python3 ./utils/wait_for_redis.py && pytest ./src"
+    env_file:
+      - ./.env
