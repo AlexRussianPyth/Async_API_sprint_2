@@ -1,21 +1,21 @@
+import json
 from functools import lru_cache
 
-import json
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from elasticsearch import NotFoundError
 from fastapi import Depends
 
+from core.config import api_settings, cache_settings
+from core.utils import generate_cache_key
 from db.bases.cache import BaseCacheService
-from db.elastic import get_elastic
+from db.bases.storage import AbstractStorage, get_storage
 from db.redis import get_redis
 from models.models import Person
-from core.utils import generate_cache_key
-from core.config import api_settings, cache_settings
 
 
 class PersonService:
-    def __init__(self, cache_service: BaseCacheService, elastic: AsyncElasticsearch):
+    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage):
         self.cache_service = cache_service
-        self.elastic = elastic
+        self.storage = storage
 
     async def get_by_id(self, person_id: str) -> Person | None:
         """Возвращает Человека по id"""
@@ -24,7 +24,7 @@ class PersonService:
 
         if not person:
             # Если человека нет в кеше, то ищем его в Elasticsearch
-            person = await self._get_person_from_elastic(person_id)
+            person = await self._get_person_from_db(person_id)
 
             if not person:
                 # Если он отсутствует в Elasticsearch, значит, человека вообще нет в базе
@@ -40,7 +40,7 @@ class PersonService:
         persons = await self._get_persons_chunk_from_cache(page=page, query=query)
         if not persons:
             # Если массива с Людьми нет в кэше, то ищем его в Эластике
-            persons = await self._get_persons_chunk_from_elastic(page, query)
+            persons = await self._get_persons_chunk_from_db(page, query)
             if not persons:
                 return None
             await self._put_persons_chunk_to_cache(persons, query, page)
@@ -49,24 +49,21 @@ class PersonService:
 
     async def films_by_person(self, person_name: str) -> list | None:
         """Возвращает данные о фильмах, в которых участвовал Человек с данным именем"""
-        films_with_person = await self.elastic.search(
-            index='movies',
-            body={
-                "query": {
-                    "multi_match": {
-                        "query": person_name,
-                        "fields": ["director", "actors_names", "writers_names"]
-                    }
+        films_with_person = await self.storage.search(index='movies', body={
+            "query": {
+                "multi_match": {
+                    "query": person_name,
+                    "fields": ["director", "actors_names", "writers_names"]
                 }
             }
-        )
+        })
         films_ids = set()
         for film in films_with_person['hits']['hits']:
             films_ids.add(film['_id'])
 
         return list(films_ids)
 
-    async def _get_persons_chunk_from_elastic(self, page: int, query: str = None) -> list[Person] | None:
+    async def _get_persons_chunk_from_db(self, page: int, query: str = None) -> list[Person] | None:
         """Достает несколько записей (или все) о Людях из Эластика, используя пагинацию"""
         if query:
             body = {
@@ -81,12 +78,9 @@ class PersonService:
         else:
             body = None
         try:
-            query_result = await self.elastic.search(
-                index='persons',
-                body=body,
-                from_=(page - 1) * int(api_settings.page_size),
-                size=api_settings.page_size,
-            )
+            query_result = await self.storage.search(index='persons', body=body,
+                                                     from_=(page - 1) * int(api_settings.page_size),
+                                                     size=api_settings.page_size)
         except NotFoundError:
             return None
 
@@ -136,9 +130,9 @@ class PersonService:
             expire=cache_settings.person_cache_expire_sec
         )
 
-    async def _get_person_from_elastic(self, person_id: str) -> Person | None:
+    async def _get_person_from_db(self, person_id: str) -> Person | None:
         try:
-            doc = await self.elastic.get('persons', person_id)
+            doc = await self.storage.get('persons', person_id)
         except NotFoundError:
             return None
 
@@ -171,6 +165,6 @@ class PersonService:
 @lru_cache()
 def get_person_service(
         cache_service: BaseCacheService = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+        storage: AbstractStorage = Depends(get_storage),
 ) -> PersonService:
-    return PersonService(cache_service, elastic)
+    return PersonService(cache_service, storage)

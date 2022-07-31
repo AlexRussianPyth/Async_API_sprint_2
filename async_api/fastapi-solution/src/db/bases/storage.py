@@ -8,7 +8,8 @@ class AbstractStorage(ABC):
         pass
 
     @abstractmethod
-    def search(self, index: str, body: dict | None, from_: int | None, size: int | None, sort: str | None = None):
+    def search(self, index: str, body: dict | None, from_: int | None = None, size: int | None = None,
+               sort: str | None = None):
         pass
 
 
