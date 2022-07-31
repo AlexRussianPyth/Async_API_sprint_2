@@ -1,21 +1,21 @@
+import json
 from functools import lru_cache
 
-import json
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from elasticsearch import NotFoundError
 from fastapi import Depends
 
-from core.utils import generate_cache_key
 from core.config import cache_settings
-from db.elastic import get_elastic
+from core.utils import generate_cache_key
 from db.bases.cache import BaseCacheService
+from db.bases.storage import AbstractStorage, get_storage
 from db.redis import get_redis
 from models.models import Film
 
 
 class FilmService:
-    def __init__(self, cache_service: BaseCacheService, elastic: AsyncElasticsearch):
+    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage):
         self.cache_service = cache_service
-        self.elastic = elastic
+        self.storage = storage
 
     # get_by_id возвращает объект фильма. Он опционален, так как фильм может отсутствовать в базе
     async def get_by_id(self, film_id: str) -> Film | None:
@@ -23,7 +23,7 @@ class FilmService:
         film = await self._get_film_from_cache(film_id)
         if not film:
             # Если фильма нет в кеше, то ищем его в Elasticsearch
-            film = await self._get_film_from_elastic(film_id)
+            film = await self._get_film_from_db(film_id)
             if not film:
                 # Если он отсутствует в Elasticsearch, значит, фильма вообще нет в базе
                 return None
@@ -51,7 +51,7 @@ class FilmService:
         )
         if not films:
             # Если массива с Фильмами нет в кэше, то ищем его в Эластике
-            films = await self._get_films_chunk_from_elastic(
+            films = await self._get_films_chunk_from_db(
                 page=page,
                 query=query,
                 page_size=page_size,
@@ -71,7 +71,7 @@ class FilmService:
 
         return films
 
-    async def _get_films_chunk_from_elastic(
+    async def _get_films_chunk_from_db(
             self,
             query: str | None,
             page: int,
@@ -101,7 +101,7 @@ class FilmService:
             body = None
 
         try:
-            result = await self.elastic.search(
+            result = await self.storage.search(
                 index='movies',
                 body=body,
                 from_=(page - 1) * int(page_size),
@@ -149,9 +149,9 @@ class FilmService:
             expire=cache_settings.film_cache_expire_sec
         )
 
-    async def _get_film_from_elastic(self, film_id: str) -> Film | None:
+    async def _get_film_from_db(self, film_id: str) -> Film | None:
         try:
-            doc = await self.elastic.get('movies', film_id)
+            doc = await self.storage.get('movies', film_id)
         except NotFoundError:
             return None
 
@@ -173,6 +173,6 @@ class FilmService:
 @lru_cache()
 def get_film_service(
         cache_service: BaseCacheService = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+        storage: AbstractStorage = Depends(get_storage),
 ) -> FilmService:
-    return FilmService(cache_service, elastic)
+    return FilmService(cache_service, storage)

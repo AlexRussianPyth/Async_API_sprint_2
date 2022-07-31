@@ -7,6 +7,8 @@ from fastapi.responses import ORJSONResponse
 from api.v1 import films, genres, persons
 from core.config import db_settings, api_settings
 from db import elastic, redis
+from db.bases import storage as base_storage
+from db.elastic import Elastic
 
 app = FastAPI(
     title=api_settings.project_name,
@@ -23,7 +25,9 @@ async def startup():
         minsize=10,
         maxsize=20
     )
-    elastic.es = AsyncElasticsearch(hosts=[f'{db_settings.elastic_host}:{db_settings.elastic_port}'])
+    base_storage.storage = Elastic(
+        AsyncElasticsearch(hosts=[f'{db_settings.elastic_host}:{db_settings.elastic_port}'])
+    )
 
 
 @app.on_event('shutdown')
