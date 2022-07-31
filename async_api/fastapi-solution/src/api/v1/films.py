@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from enum import Enum
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
@@ -27,16 +28,12 @@ class Film(BaseModel):
     writers: list[PersonShortInfo] | None
 
 
-async def sort_checker(sort):
-    if sort is not None:
-        # Проверяем, валидно ли поле для сортировки
-        if sort not in ('imdb_rating', '-imdb_rating'):
-            raise ValueError(localization['wrong_sorting_field'][lang])
-        # если первый символ в параметре сортировки это '-'
-        if sort.find('-') == 0:
-            # то приводим к нужному для ES формату
-            sort = sort.strip('-') + ":desc"
-    return sort
+class SortDirection(Enum):
+    asc = 'imdb_rating'
+    desc = '-imdb_rating'
+
+    def get_es_sort(self):
+        return f'{self.value.strip("-")}:{self.name}'
 
 
 async def get_genre_name(genre_service, genre_uuid) -> str | None:
@@ -54,7 +51,7 @@ async def get_genre_name(genre_service, genre_uuid) -> str | None:
     description="Get films with all information",
 )
 async def filter_films(
-        sort: str = None,
+        sort: SortDirection,
         filter_genre: str | None = Query(default=None, alias="filter[genre]"),
         page: int = 1,
         page_size: int = api_settings.page_size,
@@ -66,7 +63,7 @@ async def filter_films(
         filter_genre = await get_genre_name(genre_service, filter_genre)
 
     # Проверяем параметр 'sort'
-    checked_sort = await sort_checker(sort)
+    checked_sort = sort.get_es_sort()
 
     # Получаем фильмы
     films = await film_service.get_films(
