@@ -69,11 +69,11 @@ services:
       - 6379:6379
 
   fastapi:
-    environment:
-      - REDIS_HOST=redis
-      - ELASTIC_HOST=elasticsearch
+    container_name: fastapi-container
     build:
       context: ./fastapi-solution/
+    env_file:
+      - ./.env
     depends_on:
       - redis
       - elasticsearch
