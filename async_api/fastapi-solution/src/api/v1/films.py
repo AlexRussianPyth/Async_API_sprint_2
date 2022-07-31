@@ -75,22 +75,7 @@ async def filter_films(
         # Если фильмы не найдены, отдаём 404 статус
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=localization['films_not_found'][lang])
 
-    film_list = []
-    for film in films:
-        film_list.append(
-            Film(
-                uuid=film.id,
-                title=film.title,
-                imdb_rating=film.imdb_rating,
-                description=film.description,
-                directors=film.director,
-                genre=film.genre,
-                actors=film.actors,
-                writers=film.writers,
-            )
-        )
-
-    return film_list
+    return [Film(uuid=film.id, directors=film.director, **film.dict()) for film in films]
 
 
 @router.get(
@@ -116,23 +101,7 @@ async def search_films(
         # Если фильмы не найдены, отдаём 404 статус
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=localization['films_not_found'][lang])
 
-    result = []
-
-    for film in films:
-        result.append(
-            Film(
-                uuid=film.id,
-                title=film.title,
-                imdb_rating=film.imdb_rating,
-                description=film.description,
-                directors=film.director,
-                genre=film.genre,
-                actors=film.actors,
-                writers=film.writers,
-            )
-        )
-
-    return result
+    return [Film(uuid=film.id, directors=film.director, **film.dict()) for film in films]
 
 
 @router.get(
@@ -148,13 +117,4 @@ async def film_details(film_id: str, film_service: FilmService = Depends(get_fil
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=localization['films_not_found'][lang])
 
     # Перекладываем данные из models.Film в Film
-    return Film(
-        uuid=film.id,
-        title=film.title,
-        imdb_rating=film.imdb_rating,
-        description=film.description,
-        directors=film.director,
-        genre=film.genre,
-        actors=film.actors,
-        writers=film.writers,
-    )
+    return Film(uuid=film.id, directors=film.director, **film.dict())
