@@ -1,7 +1,6 @@
 import aiohttp
 import pytest
 
-from typing import Optional
 from dataclasses import dataclass
 from multidict import CIMultiDictProxy
 from elasticsearch import AsyncElasticsearch

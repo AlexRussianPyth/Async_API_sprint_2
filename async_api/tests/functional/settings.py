@@ -10,6 +10,8 @@ load_dotenv(os.path.join(pathlib.Path(__file__).parent.absolute(), '.env'))
 
 class TestSettings(BaseSettings):
     es_host: str = Field('http://127.0.0.1:9200', env='ES_HOST')
+    redis_host: str = Field('127.0.0.1', env='REDIS_HOST')
+    redis_port: str = Field('6379', env='REDIS_PORT')
 
     class Config:
         env_file = '../.env'
