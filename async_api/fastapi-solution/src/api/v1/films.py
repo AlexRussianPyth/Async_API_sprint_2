@@ -7,13 +7,17 @@ from uuid import UUID
 
 from services.film import FilmService, get_film_service
 from services.genre import GenreService, get_genre_service
-from models.models import PersonShortInfo
 from core.config import api_settings
 from core.localization import localization
 
 router = APIRouter()
 
 lang = api_settings.language
+
+
+class PersonShortInfo(BaseModel):
+    id: str
+    name: str
 
 
 class Film(BaseModel):
