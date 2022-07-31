@@ -38,19 +38,3 @@ services:
       python3 ./utils/wait_for_es.py && python3 ./utils/wait_for_redis.py && pytest ./src"
     env_file:
       - ../../.env
-#
-#      && "
-
-
-# А вот так можно тестировать тот же контейнер, который мы собирали для нашего приложения. Сначала именуем, затем
-#services:
-#  fastapi:
-#    build: ../../.
-#    image: fastapi-image
-#    ...
-#
-#  tests:
-#    image: fastapi-image
-#    ...
-#
-
