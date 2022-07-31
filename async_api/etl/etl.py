@@ -9,7 +9,7 @@ from backoff import backoff
 from settings import EsSettings, PostgreSettings
 from state import JsonFileStorage, State
 from extractors import FilmExtractor, GenreExtractor, PersonExtractor
-from transformers import FilmTransformer, GenreTransformer, PersonTransformer
+from transformers import transform_film_record, transform_genre_record, transform_person_record
 from es_loader import EsLoader
 from es_index import (
     es_films_index_schema,
@@ -42,11 +42,6 @@ if __name__ == '__main__':
         genre_extractor = GenreExtractor(pg_conn)
         person_extractor = PersonExtractor(pg_conn)
 
-        # Инициализируем класс, который преобразует данные из Postgre в подходящую для ES схему
-        film_transformer = FilmTransformer()
-        genre_transformer = GenreTransformer()
-        person_transformer = PersonTransformer()
-
         # Подключимся к нашему Elastic Search серверу
         es_settings = EsSettings()
         address = es_settings.get_full_address()
@@ -68,15 +63,15 @@ if __name__ == '__main__':
                 time.sleep(WAIT_SEC)
                 continue
 
-            validated_data = film_transformer.transform_record(films_data)
+            validated_data = transform_film_record(films_data)
             loader.bulk_upload(data=validated_data, index='movies', chunk_size=80)
 
             # Load Genres in Genre Index
             genre_data = genre_extractor.extract_genres()
-            validated_genre_data = genre_transformer.transform_record(genre_data)
+            validated_genre_data = transform_genre_record(genre_data)
             loader.bulk_upload(data=validated_genre_data, index='genres', chunk_size=80)
 
             # Load Persons in Person Index
             person_data = person_extractor.extract_persons()
-            validated_persons_data = person_transformer.transform_record(person_data)
+            validated_persons_data = transform_person_record(person_data)
             loader.bulk_upload(data=validated_persons_data, index='persons', chunk_size=80)

@@ -63,8 +63,11 @@ services:
     restart: on-failure
 
   fastapi:
+    container_name: fastapi-container
     build:
       context: ./fastapi-solution/
+    env_file:
+      - ./.env
     expose:
       - "8000"
     depends_on:

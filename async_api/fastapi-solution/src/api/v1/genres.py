@@ -35,15 +35,7 @@ async def genre_list(
         # Если список жанров не найден, отдаём 404 статус
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=localization['genres_not_found'][lang])
 
-    genre_list = []
-    for genre in genres:
-        genre_list.append(Genre(
-            uuid=UUID(genre.id),
-            name=genre.name,
-        )
-        )
-
-    return genre_list
+    return [Genre(uuid=genre.id, name=genre.name) for genre in genres]
 
 
 @router.get(
@@ -58,7 +50,4 @@ async def genre_details(genre_uuid: str, genre_service: GenreService = Depends(g
         # Если жанр не найден, отдаём 404 статус
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=localization['genre_not_found'][lang])
 
-    return Genre(
-        uuid=UUID(genre.id),
-        name=genre.name,
-    )
+    return Genre(uuid=genre.id, name=genre.name)
