@@ -17,8 +17,8 @@ class FilmService:
         self.cache_service = cache_service
         self.elastic = elastic
 
-    # get_by_id возвращает объект фильма. Он опционален, так как фильм может отсутствовать в базе
     async def get_by_id(self, film_id: str) -> Film | None:
+        """Возвращает объект фильма"""
         # Пытаемся получить данные из кеша, потому что оно работает быстрее
         film = await self._get_film_from_cache(film_id)
         if not film:
@@ -40,8 +40,7 @@ class FilmService:
             filter_genre: str | None = None,
             sort: str | None = None
     ) -> list[Film] | None:
-        """Возвращает набор фильмов из базы Elastic"""
-        """Возвращает жанры из базы Эластик либо из кэша Рэдиса"""
+        """Возвращает набор фильмов по определенным параметрам"""
         films = await self._get_films_chunk_from_cache(
             page=page,
             query=query,
@@ -120,13 +119,13 @@ class FilmService:
         return all_films
 
     async def _get_films_chunk_from_cache(self, **kwargs) -> list[Film] | None:
-        """Получает массив объектов Фильм из кэша Редиса"""
+        """Получает массив объектов Фильм из сервиса кэширования"""
         # Определяем ключ кеширования
         cache_key = await generate_cache_key(
             index="films",
             **kwargs
         )
-
+        # получаем объект из сервиса кэширование
         data = await self.cache_service.get(cache_key)
         if not data:
             return None
@@ -134,7 +133,7 @@ class FilmService:
         return [Film.parse_raw(film) for film in json.loads(data)]
 
     async def _put_films_chunk_to_cache(self, films_chunk, **kwargs) -> None:
-        """Сохранит лист Фильмов в кэше Редиса"""
+        """Сохранит лист Фильмов в сервисе кэширования"""
         # Получаем ключ для кеширования
         cache_key = await generate_cache_key(
             index="films",
