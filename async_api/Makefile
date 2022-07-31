@@ -26,3 +26,6 @@ compose:
 
 dev-compose:
 	docker-compose -f docker-compose.dev.yml up --build
+
+test-compose:
+	docker-compose -f tests/functional/docker-compose.yml up --build

@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  elasticsearch:
+    container_name: elastic-container
+    image: docker.io/elastic/elasticsearch:8.2.3
+    environment:
+      - xpack.security.enabled=false
+      - "discovery.type=single-node"
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
+    ports:
+      - 9200:9200
+
+  redis:
+    image: redis:6.0.9
+    restart: on-failure
+    ports:
+      - 6379:6379
+
+  fastapi:
+    environment:
+      - REDIS_HOST=redis
+      - ELASTIC_HOST=elasticsearch
+    build:
+      context: ../../fastapi-solution/
+    depends_on:
+      - redis
+      - elasticsearch
+    ports:
+      - 8000:8000
+
+  tests:
+    container_name: tests-container
+    build:
+      context: .
+    entrypoint: >
+      sh -c "pip install --upgrade pip && pip install -r ./requirements.txt &&
+      python3 ./utils/wait_for_es.py && python3 ./utils/wait_for_redis.py && pytest ./src"
+    env_file:
+      - ../../.env
