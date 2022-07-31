@@ -51,7 +51,7 @@ async def get_genre_name(genre_service, genre_uuid) -> str | None:
     description="Get films with all information",
 )
 async def filter_films(
-        sort: SortDirection,
+        sort: SortDirection | None = None,
         filter_genre: str | None = Query(default=None, alias="filter[genre]"),
         page: int = 1,
         page_size: int = api_settings.page_size,
@@ -62,8 +62,7 @@ async def filter_films(
     if filter_genre:
         filter_genre = await get_genre_name(genre_service, filter_genre)
 
-    # Проверяем параметр 'sort'
-    checked_sort = sort.get_es_sort()
+    checked_sort = sort.get_es_sort() if sort else None
 
     # Получаем фильмы
     films = await film_service.get_films(
