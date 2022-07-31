@@ -1,30 +1,30 @@
+import json
 from functools import lru_cache
 
-import json
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from elasticsearch import NotFoundError
 from fastapi import Depends
 
+from core.config import api_settings, cache_settings
+from core.utils import generate_cache_key
 from db.bases.cache import BaseCacheService
-from db.elastic import get_elastic
+from db.bases.storage import AbstractStorage, get_storage
 from db.redis import get_redis
 from models.models import Genre
-from core.utils import generate_cache_key
-from core.config import api_settings, cache_settings
 
 
 class GenreService:
     """Класс, который позволяет вернуть данные о жанрах напрямую из Эластика либо опосредованно из Redis"""
 
-    def __init__(self, cache_service: BaseCacheService, elastic: AsyncElasticsearch):
+    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage):
         self.cache_service = cache_service
-        self.elastic = elastic
+        self.storage = storage
 
     async def get_genres(self, page: int, query: str | None) -> list[Genre] | None:
         """Возвращает жанры из базы Эластик либо из кэша Рэдиса"""
         genres = await self._get_genres_chunk_from_cache(page=page, query=query)
         if not genres:
             # Если массива с Жанрами нет в кэше, то ищем его в Эластике
-            genres = await self._get_genres_chunk_from_elastic(page, query)
+            genres = await self._get_genres_chunk_from_db(page, query)
             if not genres:
                 return None
             await self._put_genres_chunk_to_cache(genres, query, page)
@@ -36,7 +36,7 @@ class GenreService:
         genre = await self._get_genre_from_cache(genre_id)
         if not genre:
             # Если фильма нет в кеше, то ищем его в Elasticsearch
-            genre = await self._get_genre_from_elastic(genre_id)
+            genre = await self._get_genre_from_db(genre_id)
             if not genre:
                 # Если он отсутствует в Elasticsearch, значит, жанра вообще нет в базе
                 return None
@@ -45,7 +45,7 @@ class GenreService:
 
         return genre
 
-    async def _get_genres_chunk_from_elastic(self, page: int, query: str = None) -> list[Genre] | None:
+    async def _get_genres_chunk_from_db(self, page: int, query: str = None) -> list[Genre] | None:
         """Достает несколько записей (или все) о жанрах из Эластика, используя пагинацию"""
         if query:
             body = {
@@ -57,11 +57,11 @@ class GenreService:
             body = None
 
         try:
-            result = await self.elastic.search(
+            result = await self.storage.search(
                 index='genres',
                 body=body,
                 from_=(page - 1) * int(api_settings.page_size),
-                size=api_settings.page_size,
+                size=api_settings.page_size
             )
         except NotFoundError:
             return None
@@ -107,10 +107,10 @@ class GenreService:
             expire=cache_settings.genre_cache_expire_sec
         )
 
-    async def _get_genre_from_elastic(self, genre_id: str) -> Genre | None:
+    async def _get_genre_from_db(self, genre_id: str) -> Genre | None:
         """Получает объект Жанра по id из Эластика"""
         try:
-            doc = await self.elastic.get('genres', genre_id)
+            doc = await self.storage.get('genres', genre_id)
         except NotFoundError:
             return None
         return Genre(**doc['_source'])
@@ -132,7 +132,7 @@ class GenreService:
 @lru_cache()
 def get_genre_service(
         cache_service: BaseCacheService = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+        storage: AbstractStorage = Depends(get_storage),
 ) -> GenreService:
     """Функция возвращает синглтон объект GenreService с внедренными зависимостями"""
-    return GenreService(cache_service, elastic)
+    return GenreService(cache_service, storage)
