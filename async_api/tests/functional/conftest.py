@@ -6,9 +6,9 @@ import aioredis
 from multidict import CIMultiDictProxy
 from elasticsearch import AsyncElasticsearch
 
-from settings import test_settings
+from tests.functional.settings import test_settings
 
-FASTAPI_URL = test_settings.fastapi_host + test_settings.fastapi_port
+FASTAPI_URL = f'{test_settings.fastapi_host}:{test_settings.fastapi_port}'
 
 
 @dataclass
@@ -52,9 +52,10 @@ def make_get_request(session):
     Output:
         Объект HTTPResponse
     """
-    async def inner(method: str, params: dict | None = None) -> HTTPResponse:
+
+    async def inner(endpoint: str, params: dict | None = None) -> HTTPResponse:
         params = params or {}
-        url = FASTAPI_URL + '/api/v1' + method  # в боевых системах старайтесь так не делать!
+        url = f'{FASTAPI_URL}/api/v1/{endpoint}'
         async with session.get(url, params=params) as response:
             return HTTPResponse(
                 body=await response.json(),
