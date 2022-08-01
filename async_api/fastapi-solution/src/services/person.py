@@ -19,27 +19,29 @@ class PersonService:
 
     async def get_by_id(self, person_id: str) -> Person | None:
         """Возвращает Человека по id"""
+
         # Пытаемся получить данные из кеша, потому что он работает быстрее
         person = await self._get_person_from_cache(person_id)
 
         if not person:
-            # Если человека нет в кеше, то ищем его в Elasticsearch
+            # Если человека нет в кеше, то ищем его в бд
             person = await self._get_person_from_db(person_id)
 
             if not person:
-                # Если он отсутствует в Elasticsearch, значит, человека вообще нет в базе
+                # Если он отсутствует в бд, значит, человека вообще нет в базе
                 return None
 
-            # А если человек в Elastic есть, то сохраняем в кеш
+            # А если человек в бд есть, то сохраняем в кеш
             await self._put_person_to_cache(person)
 
         return person
 
     async def search_persons(self, query: str | None, page: int) -> list[Person] | None:
-        """Возвращает массив Людей из базы Elastic либо кэша Редиса"""
+        """Возвращает массив Людей из базы либо кэша"""
+
         persons = await self._get_persons_chunk_from_cache(page=page, query=query)
         if not persons:
-            # Если массива с Людьми нет в кэше, то ищем его в Эластике
+            # Если массива с Людьми нет в кэше, то ищем его в бд
             persons = await self._get_persons_chunk_from_db(page, query)
             if not persons:
                 return None
@@ -49,6 +51,7 @@ class PersonService:
 
     async def films_by_person(self, person_name: str) -> list | None:
         """Возвращает данные о фильмах, в которых участвовал Человек с данным именем"""
+
         films_with_person = await self.storage.search(index='movies', body={
             "query": {
                 "multi_match": {
@@ -64,7 +67,8 @@ class PersonService:
         return list(films_ids)
 
     async def _get_persons_chunk_from_db(self, page: int, query: str = None) -> list[Person] | None:
-        """Достает несколько записей (или все) о Людях из Эластика, используя пагинацию"""
+        """Достает несколько записей (или все) о Людях из бд, используя пагинацию"""
+
         if query:
             body = {
                 "query": {
@@ -98,7 +102,8 @@ class PersonService:
         return persons
 
     async def _get_persons_chunk_from_cache(self, page: int, query: str | None):
-        """Получает массив объектов Человек из кэша Редиса"""
+        """Получает массив объектов Человек из кэша"""
+
         # Определяем ключ кеширования
         cache_key = await generate_cache_key(
             index="persons",
@@ -114,7 +119,8 @@ class PersonService:
         return [Person.parse_raw(person) for person in json.loads(data)]
 
     async def _put_persons_chunk_to_cache(self, persons_chunk, search_query: str | None, page: int) -> None:
-        """Сохранит лист Людей в кэше Редиса"""
+        """Сохранит лист Людей в кэше"""
+
         # Получаем ключ для кеширования
         cache_key = await generate_cache_key(
             index="persons",
@@ -138,7 +144,7 @@ class PersonService:
 
         if doc:
             person_name = doc['_source']['full_name']
-            # Найдем в Эластике список фильмов, в которых участвовал данный человек
+            # Найдем в бд список фильмов, в которых участвовал данный человек
             films_ids = await self.films_by_person(person_name)
 
             # Добавим в словарь с данными о человеке данные о фильмах и ролях
@@ -153,7 +159,6 @@ class PersonService:
         if not data:
             return None
 
-        # pydantic предоставляет удобное API для создания объекта моделей из json
         person = Person.parse_raw(data)
         return person
 

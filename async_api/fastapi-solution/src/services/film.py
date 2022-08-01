@@ -19,15 +19,16 @@ class FilmService:
 
     async def get_by_id(self, film_id: str) -> Film | None:
         """Возвращает объект фильма"""
+
         # Пытаемся получить данные из кеша, потому что оно работает быстрее
         film = await self._get_film_from_cache(film_id)
         if not film:
-            # Если фильма нет в кеше, то ищем его в Elasticsearch
+            # Если фильма нет в кеше, то ищем его в бд
             film = await self._get_film_from_db(film_id)
             if not film:
-                # Если он отсутствует в Elasticsearch, значит, фильма вообще нет в базе
+                # Если он отсутствует в бд, значит, фильма вообще нет в базе
                 return None
-            # Сохраняем фильм  в кеш
+            # Сохраняем фильм в кеш
             await self._put_film_to_cache(film)
 
         return film
@@ -41,6 +42,7 @@ class FilmService:
             sort: str | None = None
     ) -> list[Film] | None:
         """Возвращает набор фильмов по определенным параметрам"""
+
         films = await self._get_films_chunk_from_cache(
             page=page,
             query=query,
@@ -49,7 +51,7 @@ class FilmService:
             filter_genre=filter_genre
         )
         if not films:
-            # Если массива с Фильмами нет в кэше, то ищем его в Эластике
+            # Если массива с Фильмами нет в кэше, то ищем его в бд
             films = await self._get_films_chunk_from_db(
                 page=page,
                 query=query,
@@ -78,7 +80,8 @@ class FilmService:
             sort: str,
             filter_genre: str,
     ) -> list[Film] | None:
-        """Достает несколько записей (или все) о фильмах из Эластика, используя пагинацию"""
+        """Достает несколько записей (или все) о фильмах из бд, используя пагинацию"""
+
         if query:
             body = {
                 "query": {
@@ -120,6 +123,7 @@ class FilmService:
 
     async def _get_films_chunk_from_cache(self, **kwargs) -> list[Film] | None:
         """Получает массив объектов Фильм из сервиса кэширования"""
+
         # Определяем ключ кеширования
         cache_key = await generate_cache_key(
             index="films",
@@ -134,6 +138,7 @@ class FilmService:
 
     async def _put_films_chunk_to_cache(self, films_chunk, **kwargs) -> None:
         """Сохранит лист Фильмов в сервисе кэширования"""
+
         # Получаем ключ для кеширования
         cache_key = await generate_cache_key(
             index="films",

@@ -13,17 +13,18 @@ from models.models import Genre
 
 
 class GenreService:
-    """Класс, который позволяет вернуть данные о жанрах напрямую из Эластика либо опосредованно из Redis"""
+    """Класс, который позволяет вернуть данные о жанрах"""
 
     def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage):
         self.cache_service = cache_service
         self.storage = storage
 
     async def get_genres(self, page: int, query: str | None) -> list[Genre] | None:
-        """Возвращает жанры из базы Эластик либо из кэша Рэдиса"""
+        """Возвращает жанры из базы бд либо из кэша"""
+
         genres = await self._get_genres_chunk_from_cache(page=page, query=query)
         if not genres:
-            # Если массива с Жанрами нет в кэше, то ищем его в Эластике
+            # Если массива с Жанрами нет в кэше, то ищем его в бд
             genres = await self._get_genres_chunk_from_db(page, query)
             if not genres:
                 return None
@@ -33,20 +34,22 @@ class GenreService:
 
     async def get_by_id(self, genre_id: str) -> Genre | None:
         """Возвращает объект жанра. Он опционален, так как жанр может отсутствовать в базе"""
+
         genre = await self._get_genre_from_cache(genre_id)
         if not genre:
-            # Если фильма нет в кеше, то ищем его в Elasticsearch
+            # Если фильма нет в кеше, то ищем его в бд
             genre = await self._get_genre_from_db(genre_id)
             if not genre:
-                # Если он отсутствует в Elasticsearch, значит, жанра вообще нет в базе
+                # Если он отсутствует в бд, значит, жанра вообще нет в базе
                 return None
-            # Сохраняем фильм  в кеш
+            # Сохраняем жанр в кеш
             await self._put_genre_to_cache(genre)
 
         return genre
 
     async def _get_genres_chunk_from_db(self, page: int, query: str = None) -> list[Genre] | None:
-        """Достает несколько записей (или все) о жанрах из Эластика, используя пагинацию"""
+        """Достает несколько записей (или все) о жанрах из бд, используя пагинацию"""
+
         if query:
             body = {
                 'query': {
@@ -75,7 +78,8 @@ class GenreService:
         return all_genres
 
     async def _get_genres_chunk_from_cache(self, page: int, query: str | None):
-        """Получает массив объектов Жанр из кэша Редиса"""
+        """Получает массив объектов Жанр из кэша"""
+
         # Определяем ключ кеширования
         cache_key = await generate_cache_key(
             index="genres",
@@ -91,7 +95,8 @@ class GenreService:
         return [Genre.parse_raw(genre) for genre in json.loads(data)]
 
     async def _put_genres_chunk_to_cache(self, genres_chunk: list[Genre], search_query: str | None, page: int):
-        """Сохранит лист жанров в кэше Редиса"""
+        """Сохранит лист жанров в кэше"""
+
         # Получаем ключ для кеширования
         cache_key = await generate_cache_key(
             index="genres",
@@ -108,7 +113,8 @@ class GenreService:
         )
 
     async def _get_genre_from_db(self, genre_id: str) -> Genre | None:
-        """Получает объект Жанра по id из Эластика"""
+        """Получает объект Жанра по id из бд"""
+
         try:
             doc = await self.storage.get('genres', genre_id)
         except NotFoundError:
@@ -116,16 +122,17 @@ class GenreService:
         return Genre(**doc['_source'])
 
     async def _get_genre_from_cache(self, genre_id: str) -> Genre | None:
-        """Получает объект Жанра по id из Кэша в Рэдис"""
+        """Получает объект Жанра по id из Кэша"""
+
         data = await self.cache_service.get(genre_id)
         if not data:
             return None
-        # pydantic предоставляет удобное API для создания объекта моделей из json
         genre = Genre.parse_raw(data)
         return genre
 
     async def _put_genre_to_cache(self, genre: Genre):
-        """Сохраняет объект Жанра в Кэш Рэдиса"""
+        """Сохраняет объект Жанра в Кэш"""
+
         await self.cache_service.set(genre.id, genre.json(), expire=cache_settings.genre_cache_expire_sec)
 
 
