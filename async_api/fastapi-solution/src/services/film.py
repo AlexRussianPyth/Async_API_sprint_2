@@ -13,9 +13,10 @@ from models.models import Film
 
 
 class FilmService:
-    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage):
+    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage, index_name: str = 'movies'):
         self.cache_service = cache_service
         self.storage = storage
+        self.index_name = index_name
 
     async def get_by_id(self, film_id: str) -> Film | None:
         """Возвращает объект фильма"""
@@ -104,7 +105,7 @@ class FilmService:
 
         try:
             result = await self.storage.search(
-                index='movies',
+                index=self.index_name,
                 body=body,
                 from_=(page - 1) * int(page_size),
                 size=page_size,
@@ -155,7 +156,7 @@ class FilmService:
 
     async def _get_film_from_db(self, film_id: str) -> Film | None:
         try:
-            doc = await self.storage.get('movies', film_id)
+            doc = await self.storage.get(self.index_name, film_id)
         except NotFoundError:
             return None
 

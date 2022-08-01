@@ -13,9 +13,10 @@ from models.models import Person
 
 
 class PersonService:
-    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage):
+    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage, index_name: str = 'persons'):
         self.cache_service = cache_service
         self.storage = storage
+        self.index_name = index_name
 
     async def get_by_id(self, person_id: str) -> Person | None:
         """Возвращает Человека по id"""
@@ -82,7 +83,7 @@ class PersonService:
         else:
             body = None
         try:
-            query_result = await self.storage.search(index='persons', body=body,
+            query_result = await self.storage.search(index=self.index_name, body=body,
                                                      from_=(page - 1) * int(api_settings.page_size),
                                                      size=api_settings.page_size)
         except NotFoundError:
@@ -138,7 +139,7 @@ class PersonService:
 
     async def _get_person_from_db(self, person_id: str) -> Person | None:
         try:
-            doc = await self.storage.get('persons', person_id)
+            doc = await self.storage.get(self.index_name, person_id)
         except NotFoundError:
             return None
 

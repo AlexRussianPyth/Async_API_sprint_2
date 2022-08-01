@@ -15,9 +15,10 @@ from models.models import Genre
 class GenreService:
     """Класс, который позволяет вернуть данные о жанрах"""
 
-    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage):
+    def __init__(self, cache_service: BaseCacheService, storage: AbstractStorage, index_name: str = 'genres'):
         self.cache_service = cache_service
         self.storage = storage
+        self.index_name = index_name
 
     async def get_genres(self, page: int, query: str | None) -> list[Genre] | None:
         """Возвращает жанры из базы бд либо из кэша"""
@@ -61,7 +62,7 @@ class GenreService:
 
         try:
             result = await self.storage.search(
-                index='genres',
+                index=self.index_name,
                 body=body,
                 from_=(page - 1) * int(api_settings.page_size),
                 size=api_settings.page_size
@@ -116,7 +117,7 @@ class GenreService:
         """Получает объект Жанра по id из бд"""
 
         try:
-            doc = await self.storage.get('genres', genre_id)
+            doc = await self.storage.get(self.index_name, genre_id)
         except NotFoundError:
             return None
         return Genre(**doc['_source'])
