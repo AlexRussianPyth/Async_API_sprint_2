@@ -1,6 +1,7 @@
 import aiohttp
 import pytest
 
+import asyncio
 from dataclasses import dataclass
 import aioredis
 from multidict import CIMultiDictProxy
@@ -8,7 +9,7 @@ from elasticsearch import AsyncElasticsearch
 
 from .settings import test_settings
 
-FASTAPI_URL = test_settings.fastapi_host + test_settings.fastapi_port
+FASTAPI_URL = 'http://' + test_settings.fastapi_host + ':' + test_settings.fastapi_port
 
 
 @dataclass
@@ -17,6 +18,9 @@ class HTTPResponse:
     headers: CIMultiDictProxy[str]
     status: int
 
+@pytest.fixture
+def event_loop():
+    yield asyncio.get_event_loop()
 
 @pytest.fixture(scope='session')
 async def es_client():
@@ -63,3 +67,15 @@ def make_get_request(session):
             )
 
     return inner
+
+@pytest.fixture(scope='session')
+async def genres_index(es_client):
+    """Создание и заполнение индекса в Elastic"""
+
+    index_name = 'persons'
+    await es_client.indices.create(index=index_name, body=es_persons_index_schema, ignore=400)
+    persons = [{"_index": index_name, "_id": obj.get("id"), **obj} for obj in es_persons]
+    await async_bulk(client=es_client, actions=persons)
+    yield
+    # TODO после отладки расскомментировать удаление индекса
+    # await es_client.indices.delete(index=index_name)
