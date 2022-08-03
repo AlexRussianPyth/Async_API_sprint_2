@@ -1,13 +1,24 @@
 import json
 import random
 from http import HTTPStatus
+from uuid import UUID
 
 import pytest
+from pydantic import BaseModel
+
 from async_api.tests.functional.settings import test_settings
 
 from async_api.tests.functional.testdata.persons_data import es_persons
 
 pytestmark = pytest.mark.asyncio
+
+
+class Person(BaseModel):
+    """Полный набор полей для эндпоинта с описанием одного человека"""
+    uuid: UUID
+    full_name: str
+    role: str
+    film_ids: list[str]
 
 
 async def test_person_by_id(es_client, make_get_request, redis_client, persons_index):
@@ -19,11 +30,10 @@ async def test_person_by_id(es_client, make_get_request, redis_client, persons_i
 
     response = await make_get_request(endpoint=f"{test_settings.person_router_prefix}/{es_person['id']}")
     assert response.status == HTTPStatus.OK
-    api_person = response.body
-    assert isinstance(api_person, dict)
-    assert es_person['id'] == api_person.get('uuid')
-    assert es_person['full_name'] == api_person.get('full_name')
-    assert es_person['role'] == api_person.get('role')
+    person = Person(**response.body)
+    assert es_person['id'] == str(person.uuid)
+    assert es_person['full_name'] == person.full_name
+    assert es_person['role'] == person.role
 
     cache_person_json = await redis_client.get(key=es_person['id'])
     assert cache_person_json
