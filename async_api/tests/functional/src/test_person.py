@@ -6,19 +6,29 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from async_api.tests.functional.settings import test_settings
-
-from async_api.tests.functional.testdata.persons_data import es_persons
+from settings import test_settings
+from testdata.persons_data import es_persons
+from utils.cache import generate_cache_key
 
 pytestmark = pytest.mark.asyncio
 
 
-class Person(BaseModel):
-    """Полный набор полей для эндпоинта с описанием одного человека"""
-    uuid: UUID
+class PersonBase(BaseModel):
+    """Базовый набор полей"""
     full_name: str
     role: str
+
+
+class PersonScheme(PersonBase):
+    """Модель для валидации данных от api"""
+    uuid: UUID
     film_ids: list[str]
+
+
+class PersonModel(PersonBase):
+    """Модель для валидации данных из кеша"""
+    id: str
+    films_ids: list[str]
 
 
 async def test_person_by_id(es_client, make_get_request, redis_client, persons_index):
@@ -30,7 +40,7 @@ async def test_person_by_id(es_client, make_get_request, redis_client, persons_i
 
     response = await make_get_request(endpoint=f"{test_settings.person_router_prefix}/{es_person['id']}")
     assert response.status == HTTPStatus.OK
-    person = Person(**response.body)
+    person = PersonScheme(**response.body)
     assert es_person['id'] == str(person.uuid)
     assert es_person['full_name'] == person.full_name
     assert es_person['role'] == person.role
@@ -55,15 +65,23 @@ async def test_films_by_person(es_client, make_get_request, persons_index):
     # TODO сделать проверку фильмов
 
 
-async def test_all_persons(es_client, make_get_request, persons_index):
+async def test_all_persons(es_client, make_get_request, redis_client, persons_index):
     """Вывод всех людей"""
+
+    await redis_client.flushall()
+    cache_key = generate_cache_key(index='persons', query=None, page=1)
+    assert await redis_client.get(key=cache_key) is None
 
     response = await make_get_request(endpoint=f'{test_settings.person_router_prefix}/search')
     assert response.status == HTTPStatus.OK
     api_persons = response.body
-    print(api_persons)
     assert len(es_persons) == len(api_persons)
     for es_person in es_persons:
         assert next(filter(lambda person: person['uuid'] == es_person['id'], api_persons))
+    assert all([PersonScheme(**api_person) for api_person in api_persons])
 
-# TODO поиск с учётом кеша в Redis - Делать запрос и проверять, что в редисе лежит ответ
+    persons_json = await redis_client.get(cache_key)
+    assert persons_json
+    persons = json.loads(persons_json)
+    assert isinstance(persons, list)
+    assert all(PersonModel(**json.loads(person)) for person in persons)
