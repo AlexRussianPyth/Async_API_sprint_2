@@ -14,6 +14,7 @@ from async_api.tests.functional.testdata.es_index import es_persons_index_schema
 from async_api.tests.functional.testdata.persons_data import es_persons
 
 FASTAPI_URL = f'{test_settings.fastapi_host}:{test_settings.fastapi_port}'
+ES_URL = f'{test_settings.es_host}:{test_settings.es_port}'
 
 
 @dataclass
@@ -31,7 +32,7 @@ def event_loop():
 @pytest.fixture(scope='session')
 async def es_client():
     """Управляет соединением с сервисом Elastic"""
-    client = AsyncElasticsearch(hosts='127.0.0.1:9200')
+    client = AsyncElasticsearch(hosts=ES_URL)
     yield client
     await client.close()
 
