@@ -1,4 +1,5 @@
 import asyncio
+import json
 from dataclasses import dataclass
 
 import aiohttp
@@ -9,7 +10,7 @@ from elasticsearch._async.helpers import async_bulk
 from multidict import CIMultiDictProxy
 
 from async_api.tests.functional.settings import test_settings
-from async_api.tests.functional.testdata.es_index import es_persons_index_schema
+from async_api.tests.functional.testdata.es_index import es_persons_index_schema, es_films_index_schema
 from async_api.tests.functional.testdata.persons_data import es_persons
 
 FASTAPI_URL = f'{test_settings.fastapi_host}:{test_settings.fastapi_port}'
@@ -84,5 +85,4 @@ async def persons_index(es_client):
     persons = [{"_index": index_name, "_id": obj.get("id"), **obj} for obj in es_persons]
     await async_bulk(client=es_client, actions=persons)
     yield
-    # TODO после отладки расскомментировать удаление индекса
-    # await es_client.indices.delete(index=index_name)
+    await es_client.indices.delete(index=index_name)

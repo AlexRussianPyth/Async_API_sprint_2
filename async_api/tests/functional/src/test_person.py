@@ -14,21 +14,38 @@ pytestmark = pytest.mark.asyncio
 
 
 class PersonBase(BaseModel):
-    """Базовый набор полей"""
+    """Базовый набор полей персоны"""
     full_name: str
     role: str
 
 
 class PersonScheme(PersonBase):
-    """Модель для валидации данных от api"""
+    """Модель для валидации данных персоны от api"""
     uuid: UUID
     film_ids: list[str]
 
 
 class PersonModel(PersonBase):
-    """Модель для валидации данных из кеша"""
+    """Модель для валидации данных персоны из кеша"""
     id: str
     films_ids: list[str]
+
+
+class PersonShortInfo(BaseModel):
+    id: str
+    name: str
+
+
+class FilmSchema(BaseModel):
+    """Полный набор полей для эндпоинта с описанием одного фильма"""
+    uuid: UUID
+    title: str
+    imdb_rating: float
+    genre: list[str] | None
+    description: str | None
+    directors: list[str] | None
+    actors: list[PersonShortInfo] | None
+    writers: list[PersonShortInfo] | None
 
 
 async def test_person_by_id(es_client, make_get_request, redis_client, persons_index):
@@ -60,9 +77,8 @@ async def test_films_by_person(es_client, make_get_request, persons_index):
     es_person = random.choice(es_persons)
     response = await make_get_request(endpoint=f"{test_settings.person_router_prefix}/{es_person['id']}/film")
     assert response.status == HTTPStatus.OK
-    api_person = response.body
-    print(api_person)
-    # TODO сделать проверку фильмов
+    films = response.body
+    assert all([FilmSchema(**film) for film in films])
 
 
 async def test_all_persons(es_client, make_get_request, redis_client, persons_index):
