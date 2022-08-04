@@ -8,10 +8,9 @@ from elasticsearch import AsyncElasticsearch
 from elasticsearch._async.helpers import async_bulk
 from multidict import CIMultiDictProxy
 
-from async_api.tests.functional.settings import test_settings
-from async_api.tests.functional.testdata.es_index import es_persons_index_schema
-from async_api.tests.functional.testdata.persons_data import es_persons
-
+from settings import test_settings
+from testdata.es_index import es_persons_index_schema, es_films_index_schema
+from testdata.persons_data import es_persons
 
 FASTAPI_URL = f'{test_settings.fastapi_host}:{test_settings.fastapi_port}'
 ES_URL = f'{test_settings.es_host}:{test_settings.es_port}'
