@@ -14,4 +14,5 @@ class TestSettings(BaseSettings):
     person_router_prefix: str = Field('/api/v1/persons', env='PERSON_ROUTER_PREFIX')
 
 
+
 test_settings = TestSettings()

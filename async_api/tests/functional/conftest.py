@@ -12,7 +12,8 @@ from async_api.tests.functional.settings import test_settings
 from async_api.tests.functional.testdata.es_index import es_persons_index_schema
 from async_api.tests.functional.testdata.persons_data import es_persons
 
-FASTAPI_URL = f'{test_settings.fastapi_host}:{test_settings.fastapi_port}'
+
+FASTAPI_URL = f"http://{test_settings.fastapi_host}:{test_settings.fastapi_port}"
 ES_URL = f'{test_settings.es_host}:{test_settings.es_port}'
 
 
