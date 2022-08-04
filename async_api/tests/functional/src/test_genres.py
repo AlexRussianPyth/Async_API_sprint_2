@@ -37,7 +37,7 @@ async def test_genre_index_creation(es_client, redis_client):
 @pytest.mark.asyncio
 async def test_add_genres_docs(es_client, redis_client, make_get_request):
     """Проверяет, что жанры правильно добавляются в созданный индекс"""
-    cache_key = await generate_cache_key(index='genres', query=None, page=1)
+    cache_key = generate_cache_key(index='genres', query=None, page=1)
     assert await redis_client.get(key=cache_key) is None
     # Добавляем жанры в индекс
     genres = [{"_index": index_name, "_id": obj.get("id"), **obj} for obj in es_genres]

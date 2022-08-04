@@ -1,4 +1,4 @@
-async def generate_cache_key(index: str, separator: str = "::", **kwargs) -> str:
+def generate_cache_key(index: str, separator: str = "::", **kwargs) -> str:
     """Возвращает строку для кеширования на основе набора аргументов"""
 
     keys = [index]
