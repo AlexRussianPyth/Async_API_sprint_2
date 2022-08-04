@@ -10,6 +10,8 @@ services:
       - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
     ports:
       - 9200:9200
+    env_file:
+      - ../../.env
 
   redis:
     image: redis:6.0.9
@@ -18,6 +20,9 @@ services:
       - 6379:6379
 
   fastapi:
+    environment:
+      - REDIS_HOST=redis
+      - ELASTIC_HOST=elasticsearch
     build:
       context: ../../fastapi-solution/
     depends_on:
@@ -28,12 +33,12 @@ services:
     env_file:
       - ../../.env
 
-#  tests:
-#    container_name: tests-container
-#    build:
-#      context: .
-#    entrypoint: >
-#      sh -c "pip install --upgrade pip && pip install -r ./requirements.txt &&
-#      python3 ./utils/wait_for_es.py && python3 ./utils/wait_for_redis.py && pytest ./src"
-#    env_file:
-#      - ../../.env
+  tests:
+    container_name: tests-container
+    build:
+      context: .
+    entrypoint: >
+      sh -c "pip install --upgrade pip && pip install -r ./requirements.txt &&
+      python3 ./utils/wait_for_es.py && python3 ./utils/wait_for_redis.py && pytest ./src"
+    env_file:
+      - ../../.env

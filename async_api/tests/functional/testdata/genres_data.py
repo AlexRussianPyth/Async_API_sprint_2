@@ -1,4 +1,4 @@
-es_persons = [
+es_genres = [
     {
         "id": "45e5cff4-11b0-11ed-861d-0242ac120002",
         "name": "TestAdventure",

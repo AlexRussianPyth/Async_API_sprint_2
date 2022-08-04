@@ -11,4 +11,5 @@ class TestSettings(BaseSettings):
     fastapi_host: str = Field('127.0.0.1', env='FASTAPI_HOST')
     fastapi_port: str = Field('8000', env='FASTAPI_PORT')
 
+
 test_settings = TestSettings()
