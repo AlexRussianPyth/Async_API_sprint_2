@@ -1,4 +1,5 @@
 import asyncio
+import json
 from dataclasses import dataclass
 
 import aiohttp
@@ -8,10 +9,9 @@ from elasticsearch import AsyncElasticsearch
 from elasticsearch._async.helpers import async_bulk
 from multidict import CIMultiDictProxy
 
-from async_api.tests.functional.settings import test_settings
-from async_api.tests.functional.testdata.es_index import es_persons_index_schema
-from async_api.tests.functional.testdata.persons_data import es_persons
-
+from settings import test_settings
+from testdata.es_index import es_persons_index_schema, es_films_index_schema
+from testdata.persons_data import es_persons
 
 FASTAPI_URL = f'{test_settings.fastapi_host}:{test_settings.fastapi_port}'
 ES_URL = f'{test_settings.es_host}:{test_settings.es_port}'
@@ -85,5 +85,42 @@ async def persons_index(es_client):
     await es_client.indices.create(index=index_name, body=es_persons_index_schema, ignore=400)
     persons = [{"_index": index_name, "_id": obj.get("id"), **obj} for obj in es_persons]
     await async_bulk(client=es_client, actions=persons)
+    await asyncio.sleep(1)  # ждем чтобы индекс успел обновиться
+
     yield
+
+    await es_client.indices.delete(index=index_name)
+
+
+@pytest.fixture(scope='session')
+async def movies_index(es_client):
+    """Создание и заполнение индекса в Elastic"""
+
+    index_name = 'movies'
+    await es_client.indices.create(index=index_name, body=es_films_index_schema, ignore=400)
+    with open('../testdata/movies.json') as file:
+        es_films = json.load(file)
+    films = []
+    for es_film in es_films:
+        film = {
+            "_index": index_name,
+            "_id": es_film.get("id"),
+            "id": es_film.get("id"),
+            "title": es_film.get("title"),
+            "description": es_film.get("description"),
+            "imdb_rating": es_film.get("imdb_rating"),
+            "genre": es_film.get("genre"),
+            "actors": es_film.get("actors"),
+            "writers": es_film.get("writers"),
+            "actors_names": es_film.get("actors_names"),
+            "writers_names": es_film.get("writers_names"),
+            "director": es_film.get("director"),
+
+        }
+        films.append(film)
+    await async_bulk(client=es_client, actions=films)
+    await asyncio.sleep(1)  # ждем чтобы индекс успел обновиться
+
+    yield
+
     await es_client.indices.delete(index=index_name)
