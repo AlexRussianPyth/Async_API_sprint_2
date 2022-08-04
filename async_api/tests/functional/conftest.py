@@ -1,15 +1,20 @@
-import aiohttp
-import pytest
-
 import asyncio
 from dataclasses import dataclass
-import aioredis
-from multidict import CIMultiDictProxy
-from elasticsearch import AsyncElasticsearch
 
-from settings import test_settings
+import aiohttp
+import aioredis
+import pytest
+from elasticsearch import AsyncElasticsearch
+from elasticsearch._async.helpers import async_bulk
+from multidict import CIMultiDictProxy
+
+from async_api.tests.functional.settings import test_settings
+from async_api.tests.functional.testdata.es_index import es_persons_index_schema
+from async_api.tests.functional.testdata.persons_data import es_persons
+
 
 FASTAPI_URL = f"http://{test_settings.fastapi_host}:{test_settings.fastapi_port}"
+ES_URL = f'{test_settings.es_host}:{test_settings.es_port}'
 
 
 @dataclass
@@ -27,7 +32,7 @@ def event_loop():
 @pytest.fixture(scope='session')
 async def es_client():
     """Управляет соединением с сервисом Elastic"""
-    client = AsyncElasticsearch(hosts=f'{test_settings.es_host}:{test_settings.es_port}')
+    client = AsyncElasticsearch(hosts=ES_URL)
     yield client
     await client.close()
 
@@ -70,3 +75,15 @@ def make_get_request(session):
             )
 
     return inner
+
+
+@pytest.fixture(scope='session')
+async def persons_index(es_client):
+    """Создание и заполнение индекса в Elastic"""
+
+    index_name = 'persons'
+    await es_client.indices.create(index=index_name, body=es_persons_index_schema, ignore=400)
+    persons = [{"_index": index_name, "_id": obj.get("id"), **obj} for obj in es_persons]
+    await async_bulk(client=es_client, actions=persons)
+    yield
+    await es_client.indices.delete(index=index_name)
