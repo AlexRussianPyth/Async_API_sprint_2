@@ -85,7 +85,7 @@ async def persons_index(es_client):
     await es_client.indices.create(index=index_name, body=es_persons_index_schema, ignore=400)
     persons = [{"_index": index_name, "_id": obj.get("id"), **obj} for obj in es_persons]
     await async_bulk(client=es_client, actions=persons)
-    await asyncio.sleep(1)  # ждем чтобы индекс успел обновиться
+    await es_client.indices.refresh(index=[index_name, ])
 
     yield
 
@@ -119,8 +119,18 @@ async def movies_index(es_client):
         }
         films.append(film)
     await async_bulk(client=es_client, actions=films)
-    await asyncio.sleep(1)  # ждем чтобы индекс успел обновиться
+    await es_client.indices.refresh(index=[index_name, ])
 
     yield
 
     await es_client.indices.delete(index=index_name)
+
+
+@pytest.fixture(scope='session')
+def get_films():
+    def inner(schema):
+        with open('../testdata/movies.json') as file:
+            es_films = json.load(file)
+        return [schema(**es_film, uuid=es_film['id'], directors=es_film['director']) for es_film in es_films]
+
+    return inner

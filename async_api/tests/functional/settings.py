@@ -12,7 +12,7 @@ class TestSettings(BaseSettings):
     fastapi_port: str = Field('8002', env='FASTAPI_PORT')
 
     person_router_prefix: str = Field('/api/v1/persons', env='PERSON_ROUTER_PREFIX')
-
+    movies_router_prefix: str = Field('/api/v1/films', env='MOVIES_ROUTER_PREFIX')
 
 
 test_settings = TestSettings()
