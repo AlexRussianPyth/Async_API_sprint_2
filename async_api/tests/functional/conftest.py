@@ -10,7 +10,7 @@ from elasticsearch._async.helpers import async_bulk
 from multidict import CIMultiDictProxy
 
 from settings import test_settings
-from testdata.es_index import es_persons_index_schema, es_films_index_schema
+from testdata.es_index import es_films_index_schema, es_persons_index_schema
 from testdata.persons_data import es_persons
 
 FASTAPI_URL = f'{test_settings.fastapi_host}:{test_settings.fastapi_port}'
@@ -58,7 +58,7 @@ async def session():
 def make_get_request(session):
     """Фикстура для отправки GET запросов.
     Input:
-        method - конечный метод нашего RestAPI
+        endpoint - конечный метод нашего RestAPI
         params: параметры для запроса
     Output:
         Объект HTTPResponse
@@ -98,7 +98,7 @@ async def movies_index(es_client):
 
     index_name = 'movies'
     await es_client.indices.create(index=index_name, body=es_films_index_schema, ignore=400)
-    with open('../testdata/movies.json') as file:
+    with open('./testdata/movies.json') as file:
         es_films = json.load(file)
     films = []
     for es_film in es_films:
@@ -129,7 +129,7 @@ async def movies_index(es_client):
 @pytest.fixture(scope='session')
 def get_films():
     def inner(schema):
-        with open('../testdata/movies.json') as file:
+        with open('./testdata/movies.json') as file:
             es_films = json.load(file)
         return [schema(**es_film, uuid=es_film['id'], directors=es_film['director']) for es_film in es_films]
 

@@ -2,24 +2,17 @@ import asyncio
 import json
 import random
 from http import HTTPStatus
-from uuid import UUID
 
 import pytest
 from elasticsearch._async.helpers import async_bulk
 from elasticsearch.exceptions import NotFoundError
-from pydantic import BaseModel
 
+from testdata.es_index import es_genres_index_schema
 from testdata.genres_data import es_genres
 from utils.cache import generate_cache_key
-from testdata.es_index import es_genres_index_schema
+from utils.models import GenreScheme
 
 index_name = 'genres'
-
-
-class GenreApiScheme(BaseModel):
-    """Модель для валидации данных жанра от api"""
-    uuid: UUID
-    name: str
 
 
 @pytest.mark.asyncio
@@ -54,7 +47,7 @@ async def test_add_genres_docs(es_client, redis_client, make_get_request):
         await es_client.get(index='genres', id='not-resalistic-id')
 
     # Валидируем полученные жанры
-    assert all([GenreApiScheme(**genre) for genre in response.body])
+    assert all([GenreScheme(**genre) for genre in response.body])
 
 
 @pytest.mark.asyncio
@@ -72,7 +65,7 @@ async def test_get_genre_by_id(es_client, redis_client, make_get_request):
 
     # Проверяем полученный жанр
     assert response.status == HTTPStatus.OK
-    genre = GenreApiScheme(**response.body)
+    genre = GenreScheme(**response.body)
     assert es_genre['id'] == str(genre.uuid)
     assert es_genre['name'] == genre.name
 
