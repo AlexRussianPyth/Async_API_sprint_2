@@ -10,6 +10,7 @@ class TestSettings(BaseSettings):
 
     fastapi_host: str = Field('http://127.0.0.1', env='FASTAPI_HOST')
     fastapi_port: str = Field('8000', env='FASTAPI_PORT')
+    default_page_size: int = Field(50, env='PAGE_SIZE')
 
     person_router_prefix: str = Field('/api/v1/persons', env='PERSON_ROUTER_PREFIX')
     movies_router_prefix: str = Field('/api/v1/films', env='MOVIES_ROUTER_PREFIX')
