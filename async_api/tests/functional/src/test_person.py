@@ -1,51 +1,15 @@
 import json
 import random
 from http import HTTPStatus
-from uuid import UUID
 
 import pytest
-from pydantic import BaseModel
 
 from settings import test_settings
 from testdata.persons_data import es_persons
 from utils.cache import generate_cache_key
+from utils.models import FilmSchema, PersonModel, PersonScheme
 
 pytestmark = pytest.mark.asyncio
-
-
-class PersonBase(BaseModel):
-    """Базовый набор полей персоны"""
-    full_name: str
-    role: str
-
-
-class PersonScheme(PersonBase):
-    """Модель для валидации данных персоны от api"""
-    uuid: UUID
-    film_ids: list[str]
-
-
-class PersonModel(PersonBase):
-    """Модель для валидации данных персоны из кеша"""
-    id: str
-    films_ids: list[str]
-
-
-class PersonShortInfo(BaseModel):
-    id: str
-    name: str
-
-
-class FilmSchema(BaseModel):
-    """Полный набор полей для эндпоинта с описанием одного фильма"""
-    uuid: UUID
-    title: str
-    imdb_rating: float
-    genre: list[str] | None
-    description: str | None
-    directors: list[str] | None
-    actors: list[PersonShortInfo] | None
-    writers: list[PersonShortInfo] | None
 
 
 async def test_person_by_id(es_client, make_get_request, redis_client, persons_index, movies_index):

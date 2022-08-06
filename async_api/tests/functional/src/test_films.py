@@ -1,32 +1,14 @@
 import json
 import random
 from http import HTTPStatus
-from uuid import UUID
 
 import pytest
-from pydantic import BaseModel
 
 from settings import test_settings
 from utils.cache import generate_cache_key
+from utils.models import FilmSchema
 
 pytestmark = pytest.mark.asyncio
-
-
-class PersonShortInfo(BaseModel):
-    id: str
-    name: str
-
-
-class FilmSchema(BaseModel):
-    """Полный набор полей для эндпоинта с описанием одного фильма"""
-    uuid: UUID
-    title: str
-    imdb_rating: float
-    genre: list[str] | None
-    description: str | None
-    directors: list[str] | None
-    actors: list[PersonShortInfo] | None
-    writers: list[PersonShortInfo] | None
 
 
 async def test_movie_by_id(es_client, make_get_request, redis_client, movies_index, get_films):

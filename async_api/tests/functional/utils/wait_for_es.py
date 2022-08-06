@@ -1,7 +1,7 @@
+import asyncio
 import logging
 import sys
 import time
-import asyncio
 
 from elasticsearch import AsyncElasticsearch
 

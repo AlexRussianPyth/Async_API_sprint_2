@@ -1,58 +1,11 @@
-import pytest
-from http import HTTPStatus
-from uuid import UUID
 import json
+from http import HTTPStatus
 
-from pydantic import BaseModel
+import pytest
 
 from settings import test_settings
 from utils.cache import generate_cache_key
-
-
-class PersonShortInfo(BaseModel):
-    id: str
-    name: str
-
-
-class PersonBase(BaseModel):
-    """Базовый набор полей персоны"""
-    full_name: str
-    role: str
-
-
-class PersonScheme(PersonBase):
-    """Модель для валидации данных персоны от api"""
-    uuid: UUID
-    film_ids: list[str]
-
-
-class PersonModel(PersonBase):
-    """Модель для валидации данных персоны из кеша"""
-    id: str
-    films_ids: list[str]
-
-
-class FilmSchema(BaseModel):
-    """Полный набор полей для эндпоинта с описанием одного фильма"""
-    uuid: UUID
-    title: str
-    imdb_rating: float
-    genre: list[str] | None
-    description: str | None
-    directors: list[str] | None
-    actors: list[PersonShortInfo] | None
-    writers: list[PersonShortInfo] | None
-
-
-class FilmEsSchema(BaseModel):
-    id: str
-    imdb_rating: float | None
-    title: str
-    description: str
-    director: list[str] | None
-    genre: list[str] | None
-    actors: list[PersonShortInfo] | None
-    writers: list[PersonShortInfo] | None
+from utils.models import PersonScheme, PersonModel, FilmSchema, FilmEsSchema
 
 
 @pytest.mark.asyncio
@@ -115,7 +68,6 @@ async def test_person_search(es_client, redis_client, make_get_request, persons_
         assert validated_person
         search_result.append(validated_person)
 
-
     # Проверяем кэширование
     cached_search_json = await redis_client.get(
         key=generate_cache_key(
@@ -129,7 +81,10 @@ async def test_person_search(es_client, redis_client, make_get_request, persons_
     cached_search = [PersonModel.parse_raw(person) for person in json.loads(cached_search_json)]
     assert isinstance(cached_search, list)
 
-
     # Проверяем, что закешированный результат равен результату, полученному из БД
-    restored_persons = [PersonScheme(uuid=person.id, film_ids=person.films_ids, **person.dict()) for person in cached_search]
+    restored_persons = [PersonScheme(
+        uuid=person.id,
+        film_ids=person.films_ids,
+        **person.dict()
+    ) for person in cached_search]
     assert search_result == restored_persons
