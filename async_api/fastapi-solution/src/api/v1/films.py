@@ -2,6 +2,7 @@ from enum import Enum
 from http import HTTPStatus
 from uuid import UUID
 
+from api.v1.paginator import Paginator
 from core.config import api_settings
 from core.localization import localization
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -56,8 +57,7 @@ async def get_genre_name(genre_service, genre_uuid) -> str | None:
 async def filter_films(
         sort: SortDirection | None = None,
         filter_genre: str | None = Query(default=None, alias="filter[genre]"),
-        page: int = 1,
-        page_size: int = api_settings.page_size,
+        paginator: Paginator = Depends(),
         film_service: FilmService = Depends(get_film_service),
         genre_service: GenreService = Depends(get_genre_service)
 ) -> list[Film] | None:
@@ -69,8 +69,8 @@ async def filter_films(
 
     # Получаем фильмы
     films = await film_service.get_films(
-        page=page,
-        page_size=page_size,
+        page=paginator.page_number,
+        page_size=paginator.page_size,
         sort=checked_sort,
         filter_genre=filter_genre
     )
@@ -89,16 +89,15 @@ async def filter_films(
 )
 async def search_films(
         query: str = None,
-        page: int = 1,
-        page_size: int = api_settings.page_size,
+        paginator: Paginator = Depends(),
         film_service: FilmService = Depends(get_film_service),
-) -> Film:
+) -> list[Film]:
     """Осуществляет поиск фильмов по базе и возвращает список с подходящими фильмами,
     учитывая пагинацию"""
     films = await film_service.get_films(
         query=query,
-        page=page,
-        page_size=page_size,
+        page=paginator.page_number,
+        page_size=paginator.page_size,
     )
     if not films:
         # Если фильмы не найдены, отдаём 404 статус

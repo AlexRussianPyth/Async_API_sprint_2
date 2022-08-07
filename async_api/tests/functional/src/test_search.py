@@ -73,6 +73,7 @@ async def test_person_search(es_client, redis_client, make_get_request, persons_
             index='persons',
             query=person_query_string,
             page=1,
+            page_size=test_settings.default_page_size
         )
     )
 
