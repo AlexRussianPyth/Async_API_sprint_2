@@ -2,6 +2,7 @@ from http import HTTPStatus
 from uuid import UUID
 
 from api.v1.films import Film
+from api.v1.paginator import Paginator
 from core.config import api_settings
 from core.localization import localization
 from fastapi import APIRouter, Depends, HTTPException
@@ -30,12 +31,12 @@ class Person(BaseModel):
 )
 async def search_persons(
         query: str = None,
-        page: int = 1,
+        paginator: Paginator = Depends(),
         person_service: PersonService = Depends(get_person_service)
         ) -> list[Person]:
     """Осуществляет поиск людей по базе и возвращает список с подходящими людьми,
     учитывая пагинацию"""
-    persons = await person_service.search_persons(query, page)
+    persons = await person_service.search_persons(query, paginator.page_number, paginator.page_size)
     if not persons:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=localization['persons_not_found'][lang])
 
