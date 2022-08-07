@@ -36,16 +36,16 @@ class PersonService:
 
         return person
 
-    async def search_persons(self, query: str | None, page: int) -> list[Person] | None:
+    async def search_persons(self, query: str | None, page: int, page_size: int) -> list[Person] | None:
         """Возвращает массив Людей из базы либо кэша"""
 
-        persons = await self._get_persons_chunk_from_cache(page=page, query=query)
+        persons = await self._get_persons_chunk_from_cache(page=page, page_size=page_size, query=query)
         if not persons:
             # Если массива с Людьми нет в кэше, то ищем его в бд
-            persons = await self._get_persons_chunk_from_db(page, query)
+            persons = await self._get_persons_chunk_from_db(page, page_size, query)
             if not persons:
                 return None
-            await self._put_persons_chunk_to_cache(persons, query, page)
+            await self._put_persons_chunk_to_cache(persons, query, page, page_size)
 
         return persons
 
@@ -66,7 +66,7 @@ class PersonService:
 
         return list(films_ids)
 
-    async def _get_persons_chunk_from_db(self, page: int, query: str = None) -> list[Person] | None:
+    async def _get_persons_chunk_from_db(self, page: int, page_size: int, query: str = None) -> list[Person] | None:
         """Достает несколько записей (или все) о Людях из бд, используя пагинацию"""
 
         if query:
@@ -84,7 +84,7 @@ class PersonService:
         try:
             query_result = await self.storage.search(index=self.index_name, body=body,
                                                      from_=(page - 1) * int(api_settings.page_size),
-                                                     size=api_settings.page_size)
+                                                     size=page_size)
         except NotFoundError:
             return None
 
@@ -101,14 +101,15 @@ class PersonService:
 
         return persons
 
-    async def _get_persons_chunk_from_cache(self, page: int, query: str | None):
+    async def _get_persons_chunk_from_cache(self, page: int, page_size: int, query: str | None):
         """Получает массив объектов Человек из кэша"""
 
         # Определяем ключ кеширования
         cache_key = await generate_cache_key(
             index="persons",
             query=query,
-            page=page
+            page=page,
+            page_size=page_size
         )
 
         data = await self.cache_service.get(cache_key)
@@ -118,14 +119,16 @@ class PersonService:
 
         return [Person.parse_raw(person) for person in json.loads(data)]
 
-    async def _put_persons_chunk_to_cache(self, persons_chunk, search_query: str | None, page: int) -> None:
+    async def _put_persons_chunk_to_cache(self, persons_chunk, search_query: str | None, page: int,
+                                          page_size: int) -> None:
         """Сохранит лист Людей в кэше"""
 
         # Получаем ключ для кеширования
         cache_key = await generate_cache_key(
             index="persons",
             query=search_query,
-            page=page
+            page=page,
+            page_size=page_size
         )
 
         data = [chunk.json() for chunk in persons_chunk]
