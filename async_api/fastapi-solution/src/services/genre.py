@@ -1,14 +1,13 @@
 import json
 from functools import lru_cache
 
-from elasticsearch import NotFoundError
-from fastapi import Depends
-
 from core.config import api_settings, cache_settings
 from core.utils import generate_cache_key
 from db.bases.cache import BaseCacheService
 from db.bases.storage import AbstractStorage, get_storage
 from db.redis import get_redis
+from elasticsearch import NotFoundError
+from fastapi import Depends
 from models.models import Genre
 
 

@@ -1,10 +1,9 @@
 import os
 from enum import Enum
-
 from logging import config as logging_config
-from pydantic import BaseSettings, Field
 
 from core.logger import LOGGING
+from pydantic import BaseSettings, Field
 
 
 class Language(Enum):

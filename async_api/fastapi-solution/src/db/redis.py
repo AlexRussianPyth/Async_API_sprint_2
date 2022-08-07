@@ -1,6 +1,6 @@
-from aioredis import Redis
 from functools import lru_cache
 
+from aioredis import Redis
 from db.bases.cache import BaseCacheService
 
 redis: Redis | None = None

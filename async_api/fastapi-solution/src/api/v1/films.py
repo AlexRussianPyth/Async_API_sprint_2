@@ -1,14 +1,13 @@
-from http import HTTPStatus
 from enum import Enum
-
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from http import HTTPStatus
 from uuid import UUID
 
-from services.film import FilmService, get_film_service
-from services.genre import GenreService, get_genre_service
 from core.config import api_settings
 from core.localization import localization
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from services.film import FilmService, get_film_service
+from services.genre import GenreService, get_genre_service
 
 router = APIRouter()
 

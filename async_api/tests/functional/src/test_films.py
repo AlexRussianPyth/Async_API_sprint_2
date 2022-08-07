@@ -3,7 +3,6 @@ import random
 from http import HTTPStatus
 
 import pytest
-
 from settings import test_settings
 from utils.cache import generate_cache_key
 from utils.models import FilmSchema

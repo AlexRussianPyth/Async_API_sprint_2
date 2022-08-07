@@ -1,6 +1,15 @@
+from dataclasses import dataclass
 from uuid import UUID
 
+from multidict import CIMultiDictProxy
 from pydantic import BaseModel
+
+
+@dataclass
+class HTTPResponse:
+    body: dict
+    headers: CIMultiDictProxy[str]
+    status: int
 
 
 class PersonBase(BaseModel):

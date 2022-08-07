@@ -1,14 +1,13 @@
 import aioredis
 import uvicorn
-from elasticsearch import AsyncElasticsearch
-from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
-
 from api.v1 import films, genres, persons
-from core.config import db_settings, api_settings
+from core.config import api_settings, db_settings
 from db import elastic, redis
 from db.bases import storage as base_storage
 from db.elastic import Elastic
+from elasticsearch import AsyncElasticsearch
+from fastapi import FastAPI
+from fastapi.responses import ORJSONResponse
 
 app = FastAPI(
     title=api_settings.project_name,

@@ -1,14 +1,13 @@
 from http import HTTPStatus
-
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from uuid import UUID
 
-from services.person import PersonService, get_person_service
-from services.film import FilmService, get_film_service
 from api.v1.films import Film
-from core.localization import localization
 from core.config import api_settings
+from core.localization import localization
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from services.film import FilmService, get_film_service
+from services.person import PersonService, get_person_service
 
 router = APIRouter()
 
