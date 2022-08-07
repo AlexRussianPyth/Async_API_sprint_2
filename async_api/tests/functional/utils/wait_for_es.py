@@ -4,6 +4,7 @@ import sys
 import time
 
 from elasticsearch import AsyncElasticsearch
+from backoff import backoff
 
 # setting path
 sys.path.append('..')

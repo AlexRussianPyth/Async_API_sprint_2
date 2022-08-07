@@ -10,6 +10,7 @@ sys.path.append('..')
 
 from settings import test_settings
 
+
 logger = logging.getLogger('tests_logger')
 
 HOST = test_settings.redis_host
