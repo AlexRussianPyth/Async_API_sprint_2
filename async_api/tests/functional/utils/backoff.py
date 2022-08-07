@@ -1,7 +1,6 @@
 import logging
 import time
 from functools import wraps
-import aiohttp
 
 import aioredis
 import elasticsearch

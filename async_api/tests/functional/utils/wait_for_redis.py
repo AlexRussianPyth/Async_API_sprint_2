@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import sys
-import time
 
 import aioredis
 
