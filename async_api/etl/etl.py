@@ -2,20 +2,17 @@ import logging
 import time
 
 import psycopg2
+from backoff import backoff
+from es_index import (es_films_index_schema, es_genres_index_schema,
+                      es_persons_index_schema)
+from es_loader import EsLoader
+from extractors import FilmExtractor, GenreExtractor, PersonExtractor
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
-
-from backoff import backoff
 from settings import EsSettings, PostgreSettings
 from state import JsonFileStorage, State
-from extractors import FilmExtractor, GenreExtractor, PersonExtractor
-from transformers import transform_film_record, transform_genre_record, transform_person_record
-from es_loader import EsLoader
-from es_index import (
-    es_films_index_schema,
-    es_genres_index_schema,
-    es_persons_index_schema
-)
+from transformers import (transform_film_record, transform_genre_record,
+                          transform_person_record)
 
 logging.basicConfig(level=logging.DEBUG)
 

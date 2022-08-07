@@ -1,9 +1,8 @@
 import logging
 from typing import List
 
-from psycopg2.extensions import connection as _connection
-
 from backoff import backoff
+from psycopg2.extensions import connection as _connection
 from utils import ornate_ids
 
 

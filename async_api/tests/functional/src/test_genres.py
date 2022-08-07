@@ -6,7 +6,6 @@ from http import HTTPStatus
 import pytest
 from elasticsearch._async.helpers import async_bulk
 from elasticsearch.exceptions import NotFoundError
-
 from testdata.es_index import es_genres_index_schema
 from testdata.genres_data import es_genres
 from utils.cache import generate_cache_key

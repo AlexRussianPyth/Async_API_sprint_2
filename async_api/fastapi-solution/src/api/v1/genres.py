@@ -1,12 +1,11 @@
 from http import HTTPStatus
-
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from uuid import UUID
 
-from services.genre import GenreService, get_genre_service
 from core.config import api_settings
 from core.localization import localization
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from services.genre import GenreService, get_genre_service
 
 router = APIRouter()
 

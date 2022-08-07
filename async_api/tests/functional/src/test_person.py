@@ -3,7 +3,6 @@ import random
 from http import HTTPStatus
 
 import pytest
-
 from settings import test_settings
 from testdata.persons_data import es_persons
 from utils.cache import generate_cache_key

@@ -2,10 +2,9 @@ import json
 from http import HTTPStatus
 
 import pytest
-
 from settings import test_settings
 from utils.cache import generate_cache_key
-from utils.models import PersonScheme, PersonModel, FilmSchema, FilmEsSchema
+from utils.models import FilmEsSchema, FilmSchema, PersonModel, PersonScheme
 
 
 @pytest.mark.asyncio
