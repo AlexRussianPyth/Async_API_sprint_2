@@ -46,7 +46,11 @@ async def test_all_movies(es_client, make_get_request, redis_client, movies_inde
     )
     assert await redis_client.get(key=cache_key) is None
 
-    response = await make_get_request(endpoint=f'{test_settings.movies_router_prefix}/?page=1&page_size={page_size}')
+    params = {
+        'page[number]': 1,
+        'page[size]': page_size
+    }
+    response = await make_get_request(endpoint=f'{test_settings.movies_router_prefix}/', params=params)
     assert response.status == HTTPStatus.OK
     api_films = response.body
     assert len(api_films) == page_size
