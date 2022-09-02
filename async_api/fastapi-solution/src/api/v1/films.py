@@ -2,11 +2,13 @@ from enum import Enum
 from http import HTTPStatus
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+
 from api.v1.paginator import Paginator
 from core.config import api_settings
 from core.localization import localization
-from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from services.auth import JWTBearer
 from services.film import FilmService, get_film_service
 from services.genre import GenreService, get_genre_service
 
@@ -59,7 +61,8 @@ async def filter_films(
         filter_genre: str | None = Query(default=None, alias="filter[genre]"),
         paginator: Paginator = Depends(),
         film_service: FilmService = Depends(get_film_service),
-        genre_service: GenreService = Depends(get_genre_service)
+        genre_service: GenreService = Depends(get_genre_service),
+        token: str = Depends(JWTBearer())
 ) -> list[Film] | None:
     # Пробуем получить имя жанра, указанное в запросе
     if filter_genre:
@@ -91,6 +94,7 @@ async def search_films(
         query: str = None,
         paginator: Paginator = Depends(),
         film_service: FilmService = Depends(get_film_service),
+        token: str = Depends(JWTBearer()),
 ) -> list[Film]:
     """Осуществляет поиск фильмов по базе и возвращает список с подходящими фильмами,
     учитывая пагинацию"""
@@ -112,7 +116,11 @@ async def search_films(
     summary="Get film by id",
     description="Get full film info by provided ID"
 )
-async def film_details(film_id: str, film_service: FilmService = Depends(get_film_service)) -> Film:
+async def film_details(
+        film_id: str,
+        film_service: FilmService = Depends(get_film_service),
+        token: str = Depends(JWTBearer()),
+) -> Film:
     film = await film_service.get_by_id(film_id)
     if not film:
         # Если фильм не найден, отдаём 404 статус
