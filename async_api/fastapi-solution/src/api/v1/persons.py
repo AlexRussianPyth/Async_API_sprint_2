@@ -1,12 +1,14 @@
 from http import HTTPStatus
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+
 from api.v1.films import Film
 from api.v1.paginator import Paginator
 from core.config import api_settings
 from core.localization import localization
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from services.auth import JWTBearer
 from services.film import FilmService, get_film_service
 from services.person import PersonService, get_person_service
 
@@ -32,7 +34,8 @@ class Person(BaseModel):
 async def search_persons(
         query: str = None,
         paginator: Paginator = Depends(),
-        person_service: PersonService = Depends(get_person_service)
+        person_service: PersonService = Depends(get_person_service),
+        token: str = Depends(JWTBearer()),
         ) -> list[Person]:
     """Осуществляет поиск людей по базе и возвращает список с подходящими людьми,
     учитывая пагинацию"""
@@ -59,7 +62,11 @@ async def search_persons(
     summary="Get person by id",
     description="Get person info by provided id"
 )
-async def person_details(person_id: str, person_service: PersonService = Depends(get_person_service)) -> Person:
+async def person_details(
+        person_id: str,
+        person_service: PersonService = Depends(get_person_service),
+        token: str = Depends(JWTBearer()),
+) -> Person:
     """Возвращает Человека по id, либо HTTPException, если Человека с таким id не существует"""
     person = await person_service.get_by_id(person_id)
     if not person:
@@ -82,7 +89,8 @@ async def person_details(person_id: str, person_service: PersonService = Depends
 async def films_by_person(
         person_id: str,
         person_service: PersonService = Depends(get_person_service),
-        film_service: FilmService = Depends(get_film_service)
+        film_service: FilmService = Depends(get_film_service),
+        token: str = Depends(JWTBearer()),
 ) -> list[Film]:
     """Возвращает список фильмов, в которых участвовал Человек с данным id, либо HTTPException, если человека
     или фильмов не существует"""

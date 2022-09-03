@@ -23,6 +23,8 @@ class ApiSettings(MainSettings):
     project_name: str = Field(..., env='PROJECT_NAME')
     page_size: int = Field(..., env='PAGE_SIZE')
     language: Language = Field(..., env='LOC_LANGUAGE')
+    jwt_secret: str = Field(..., env='JWT_SECRET')
+    jwt_algorithm: str = Field(..., env='JWT_ALGORITHM')
 
 
 class DatabaseSettings(MainSettings):
@@ -41,7 +43,6 @@ class CacheSettings(MainSettings):
 db_settings = DatabaseSettings()
 cache_settings = CacheSettings()
 api_settings = ApiSettings()
-
 
 # Применяем настройки логирования
 logging_config.dictConfig(LOGGING)

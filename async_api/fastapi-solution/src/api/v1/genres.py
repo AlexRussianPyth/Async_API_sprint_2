@@ -1,10 +1,12 @@
 from http import HTTPStatus
 from uuid import UUID
 
-from core.config import api_settings
-from core.localization import localization
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+
+from core.config import api_settings
+from core.localization import localization
+from services.auth import JWTBearer
 from services.genre import GenreService, get_genre_service
 
 router = APIRouter()
@@ -28,6 +30,7 @@ async def genre_list(
         page: int = 1,
         genre_service: GenreService = Depends(get_genre_service),
         query: str = None,
+        token: str = Depends(JWTBearer()),
         ) -> list[Genre]:
     genres = await genre_service.get_genres(page=page, query=query)
     if not genres:
@@ -43,7 +46,11 @@ async def genre_list(
     summary="Get genre",
     description="Get info about genre by provided id"
 )
-async def genre_details(genre_uuid: str, genre_service: GenreService = Depends(get_genre_service)) -> Genre:
+async def genre_details(
+        genre_uuid: str,
+        genre_service: GenreService = Depends(get_genre_service),
+        token: str = Depends(JWTBearer()),
+) -> Genre:
     genre = await genre_service.get_by_id(genre_uuid)
     if not genre:
         # Если жанр не найден, отдаём 404 статус
