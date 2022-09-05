@@ -30,7 +30,7 @@ async def genre_list(
         page: int = 1,
         genre_service: GenreService = Depends(get_genre_service),
         query: str = None,
-        token: str = Depends(JWTBearer()),
+        user: str = Depends(JWTBearer()),
         ) -> list[Genre]:
     genres = await genre_service.get_genres(page=page, query=query)
     if not genres:
@@ -49,7 +49,7 @@ async def genre_list(
 async def genre_details(
         genre_uuid: str,
         genre_service: GenreService = Depends(get_genre_service),
-        token: str = Depends(JWTBearer()),
+        user: str = Depends(JWTBearer()),
 ) -> Genre:
     genre = await genre_service.get_by_id(genre_uuid)
     if not genre:
