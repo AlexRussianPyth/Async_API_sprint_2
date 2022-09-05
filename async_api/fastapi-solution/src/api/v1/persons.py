@@ -35,7 +35,7 @@ async def search_persons(
         query: str = None,
         paginator: Paginator = Depends(),
         person_service: PersonService = Depends(get_person_service),
-        token: str = Depends(JWTBearer()),
+        user: str = Depends(JWTBearer()),
         ) -> list[Person]:
     """Осуществляет поиск людей по базе и возвращает список с подходящими людьми,
     учитывая пагинацию"""
@@ -65,7 +65,7 @@ async def search_persons(
 async def person_details(
         person_id: str,
         person_service: PersonService = Depends(get_person_service),
-        token: str = Depends(JWTBearer()),
+        user: str = Depends(JWTBearer()),
 ) -> Person:
     """Возвращает Человека по id, либо HTTPException, если Человека с таким id не существует"""
     person = await person_service.get_by_id(person_id)
@@ -90,7 +90,7 @@ async def films_by_person(
         person_id: str,
         person_service: PersonService = Depends(get_person_service),
         film_service: FilmService = Depends(get_film_service),
-        token: str = Depends(JWTBearer()),
+        user: str = Depends(JWTBearer()),
 ) -> list[Film]:
     """Возвращает список фильмов, в которых участвовал Человек с данным id, либо HTTPException, если человека
     или фильмов не существует"""

@@ -22,11 +22,15 @@ class PersonShortInfo(BaseModel):
     name: str
 
 
-class Film(BaseModel):
-    """Полный набор полей для эндпоинта с описанием одного фильма"""
+class BaseFilm(BaseModel):
+    """Сокращенные данные по фильмам"""
     uuid: UUID
     title: str
     imdb_rating: float
+
+
+class Film(BaseFilm):
+    """Полный набор полей для эндпоинта с описанием одного фильма"""
     genre: list[str] | None
     description: str | None
     directors: list[str] | None
@@ -62,8 +66,8 @@ async def filter_films(
         paginator: Paginator = Depends(),
         film_service: FilmService = Depends(get_film_service),
         genre_service: GenreService = Depends(get_genre_service),
-        token: str = Depends(JWTBearer())
-) -> list[Film] | None:
+        user: str = Depends(JWTBearer(auto_error=False))
+) -> list[BaseFilm] | None:
     # Пробуем получить имя жанра, указанное в запросе
     if filter_genre:
         filter_genre = await get_genre_name(genre_service, filter_genre)
@@ -80,7 +84,8 @@ async def filter_films(
     if not films:
         # Если фильмы не найдены, отдаём 404 статус
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=localization['films_not_found'][lang])
-
+    if not user:
+        return [BaseFilm(uuid=film.id, **film.dict()) for film in films]
     return [Film(uuid=film.id, directors=film.director, **film.dict()) for film in films]
 
 
@@ -94,7 +99,7 @@ async def search_films(
         query: str = None,
         paginator: Paginator = Depends(),
         film_service: FilmService = Depends(get_film_service),
-        token: str = Depends(JWTBearer()),
+        user: str = Depends(JWTBearer()),
 ) -> list[Film]:
     """Осуществляет поиск фильмов по базе и возвращает список с подходящими фильмами,
     учитывая пагинацию"""
@@ -119,7 +124,7 @@ async def search_films(
 async def film_details(
         film_id: str,
         film_service: FilmService = Depends(get_film_service),
-        token: str = Depends(JWTBearer()),
+        user: str = Depends(JWTBearer()),
 ) -> Film:
     film = await film_service.get_by_id(film_id)
     if not film:
