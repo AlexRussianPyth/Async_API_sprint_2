@@ -40,9 +40,18 @@ class CacheSettings(MainSettings):
     film_cache_expire_sec: int = Field(..., env='FILM_CACHE_EXPIRE_IN_SECONDS')
 
 
+class Sentry(MainSettings):
+    dsn: str
+    traces_sample_rate: float = 1.0
+
+    class Config:
+        env_prefix = 'sentry_'
+
+
 db_settings = DatabaseSettings()
 cache_settings = CacheSettings()
 api_settings = ApiSettings()
+sentry_settings = Sentry()
 
 # Применяем настройки логирования
 logging_config.dictConfig(LOGGING)

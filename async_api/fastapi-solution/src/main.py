@@ -1,13 +1,20 @@
 import aioredis
+import sentry_sdk
 import uvicorn
 from api.v1 import films, genres, persons
-from core.config import api_settings, db_settings
+from core.config import api_settings, db_settings, sentry_settings
 from db import elastic, redis
 from db.bases import storage as base_storage
 from db.elastic import Elastic
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
+
+
+sentry_sdk.init(
+    dsn=sentry_settings.dsn,
+    traces_sample_rate=sentry_settings.traces_sample_rate,
+)
 
 app = FastAPI(
     title=api_settings.project_name,

@@ -22,8 +22,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'movies.apps.MoviesConfig',
-    'corsheaders'
+    'corsheaders',
 ]
+# Sentry settings
+include(
+    'components/sentry.py',
+)
 
 # Middleware Settings
 include(
