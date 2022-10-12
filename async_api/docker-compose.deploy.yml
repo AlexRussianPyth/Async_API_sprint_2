@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+    filebeat:
+      image: elastic/filebeat:8.4.3
+      environment:
+        - LOGSTASH_HOSTS=["logstash:5045"]
+      volumes:
+        - /tmp/logs/nginx/json:/var/log/nginx:ro
+        - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+        - /tmp/logs/admin/json:/var/log/admin:ro
+        - /tmp/logs/asynccinema/json:/var/log/asynccinema:ro

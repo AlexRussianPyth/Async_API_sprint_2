@@ -1,13 +1,23 @@
 import aioredis
+import sentry_sdk
 import uvicorn
-from api.v1 import films, genres, persons
-from core.config import api_settings, db_settings
-from db import elastic, redis
-from db.bases import storage as base_storage
-from db.elastic import Elastic
+
+from asgi_correlation_id import CorrelationIdMiddleware
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
+
+
+from api.v1 import films, genres, persons
+from core.config import api_settings, db_settings, sentry_settings
+from db import elastic, redis
+from db.bases import storage as base_storage
+from db.elastic import Elastic
+
+sentry_sdk.init(
+    dsn=sentry_settings.sentry_dsn,
+    traces_sample_rate=sentry_settings.sentry_traces_sample_rate,
+)
 
 app = FastAPI(
     title=api_settings.project_name,
@@ -16,6 +26,10 @@ app = FastAPI(
     default_response_class=ORJSONResponse,
 )
 
+app.add_middleware(
+    CorrelationIdMiddleware,
+    header_name='X-Request-ID',
+)
 
 @app.on_event('startup')
 async def startup():
