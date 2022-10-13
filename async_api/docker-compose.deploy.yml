@@ -1,5 +1,6 @@
 version: "3.8"
 services:
+
     filebeat:
       image: elastic/filebeat:8.4.3
       environment:
