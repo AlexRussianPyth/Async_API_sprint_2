@@ -25,4 +25,7 @@ COPY . .
 
 EXPOSE 8000
 
+RUN  mkdir -p /var/log/app/ \ 
+     && chmod -R 777 /var/log/app/
+
 ENTRYPOINT ["uwsgi", "--strict", "--ini", "uwsgi.ini"]

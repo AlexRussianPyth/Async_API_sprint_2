@@ -1,0 +1,29 @@
+filebeat.inputs:
+  - type: log
+    id: nginx
+    enabled: true
+    paths:
+      - /var/log/nginx/*
+    processors:
+      - add_tags:
+          tags: ["nginx"]
+  - type: log
+    id: admin
+    enabled: true
+    paths:
+      - /var/log/admin/*
+    processors:
+      - add_tags:
+          tags: ["admin"]
+  - type: log
+    id: asynccinema
+    enabled: true
+    paths:
+      - /var/log/asynccinema/*
+    processors:
+      - add_tags:
+          tags: ["asynccinema"]          
+
+output.logstash:
+  enabled: true
+  hosts:  ${LOGSTASH_HOSTS}
