@@ -1,7 +1,7 @@
 import logging
 from typing import Iterator, List
 
-from backoff import backoff
+from core.backoff import backoff
 from elasticsearch import Elasticsearch, TransportError, helpers
 
 logger = logging.getLogger('etl_logger')

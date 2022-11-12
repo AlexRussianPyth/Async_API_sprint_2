@@ -1,14 +1,13 @@
 import logging
-from typing import List
 
-from backoff import backoff
+from core.backoff import backoff
 from psycopg2.extensions import connection as _connection
-from utils import ornate_ids
+from core.utils import ornate_ids
 
 
 class FilmExtractor:
-    """Вытаскивает из Postgre обновленные записи фильмов, людей, жанров, обогащает их
-    связанными данными"""
+    """Получает из Postgre обновленные записи фильмов, людей, жанров, в то же время 
+    обогащает их связанными данными"""
     def __init__(self, connection: _connection, state_manager):
         self.connection = connection
         self.state_manager = state_manager
@@ -24,7 +23,6 @@ class FilmExtractor:
         """Проходит по всем данным в таблицах
         Returns: Список измененных фильмов со всеми связанными данными о людях и жанрах
         """
-
         last_film_check = self.state_manager.get_state("last_film_work_check")
         last_genre_check = self.state_manager.get_state("last_genre_check")
         last_person_check = self.state_manager.get_state("last_person_check")
@@ -47,7 +45,7 @@ class FilmExtractor:
         return full_data
 
     @backoff()
-    def get_modified(self, table: str, date: str, batch_size: int) -> List[List]:
+    def get_modified(self, table: str, date: str, batch_size: int) -> list[list]:
 
         query = f'''
         SELECT id, modified
@@ -115,7 +113,7 @@ class FilmExtractor:
         id_string = ornate_ids(films_ids)
 
         query = f"""
-        SELECT fw.id as filmwork_id, fw.title, fw.description, fw.rating,
+        SELECT fw.id as filmwork_id, fw.title, fw.description, fw.subscription, fw.rating,
                ARRAY_AGG(DISTINCT g.name) AS genre,
                ARRAY_AGG(DISTINCT p.full_name) FILTER (WHERE pfw.role = 'director') AS director,
                ARRAY_AGG(DISTINCT p.full_name) FILTER (WHERE pfw.role = 'actor') AS actors_names,

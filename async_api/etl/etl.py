@@ -1,18 +1,16 @@
 import logging
 import time
 
-import psycopg2
-from backoff import backoff
-from es_index import (es_films_index_schema, es_genres_index_schema,
-                      es_persons_index_schema)
+from schemas.es_index import (es_films_index_schema, es_genres_index_schema,
+                              es_persons_index_schema)
 from es_loader import EsLoader
 from extractors import FilmExtractor, GenreExtractor, PersonExtractor
-from psycopg2.extensions import connection as _connection
-from psycopg2.extras import DictCursor
-from settings import EsSettings, PostgreSettings
+from core.settings import es_settings, postgre_settings
 from state import JsonFileStorage, State
 from transformers import (transform_film_record, transform_genre_record,
                           transform_person_record)
+from db.connections import create_pg_conn
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -21,14 +19,8 @@ logger = logging.getLogger('etl_logger')
 WAIT_SEC = 2
 
 
-@backoff()
-def create_pg_conn(settings: dict) -> _connection:
-    """Создает подключение к Postgre"""
-    return psycopg2.connect(**settings, cursor_factory=DictCursor)
-
-
 if __name__ == '__main__':
-    with create_pg_conn(PostgreSettings().dict()) as pg_conn:
+    with create_pg_conn(postgre_settings.dict()) as pg_conn:
         # Запускаем класс, управляющий записями о состояниях
         json_storage = JsonFileStorage('states.json')
         json_storage.create_json_storage()
@@ -40,11 +32,7 @@ if __name__ == '__main__':
         person_extractor = PersonExtractor(pg_conn)
 
         # Подключимся к нашему Elastic Search серверу
-        es_settings = EsSettings()
-        address = es_settings.get_full_address()
-
-        # Инициализируем класс, который управляет загрузкой данных в ElasticSearch
-        loader = EsLoader(address=address)
+        loader = EsLoader(address=es_settings.get_full_address())
 
         # Проверяем наличие индекса и создаем его, если индекс отсутствует
         loader.create_index(index_name='movies', schema=es_films_index_schema)

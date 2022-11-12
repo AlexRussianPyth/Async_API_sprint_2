@@ -66,6 +66,10 @@ es_films_index_schema = {
                 "type": "text",
                 "analyzer": "ru_en"
             },
+            "subscription": {
+                "type": "text",
+                "analyzer": "ru_en"
+            },
             "director": {
                 "type": "text",
                 "analyzer": "ru_en"

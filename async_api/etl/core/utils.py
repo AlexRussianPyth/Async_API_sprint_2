@@ -1,5 +1,5 @@
 def ornate_ids(ids_list) -> str:
-    """Приводит лист с ID к удобному для Postgres queries формату:
+    """Приводит лист с ID к удобному формату для запросов в Postgre:
     'id', 'id', ...
     """
 

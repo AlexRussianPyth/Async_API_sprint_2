@@ -14,6 +14,7 @@ class EsFilmwork(BaseModel):
     genre: list[str]
     title: str
     description: Optional[str]
+    subscription: str
     director: Optional[list[str]]
     actors_names: Optional[list[str]]
     writers_names: Optional[list[str]]
