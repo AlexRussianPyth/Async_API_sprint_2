@@ -5,12 +5,7 @@
 ```
     $ docker-compose up --build
 ```
-3. Откройте контейнер с БД и создайте схему 'content':
-```
-    $ docker exec -it database-container bash
-    $ psql -U app -d movies_database
-    $ CREATE SCHEMA IF NOT EXISTS content;
-```
+3. Схема "content" в нашей БД будет создана автоматически при первом запуске docker-compose.
 4. Мигрируйте модели в Джанго:
 ```
     $ docker exec web-container python3 manage.py migrate
