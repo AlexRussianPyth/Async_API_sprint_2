@@ -1,17 +1,18 @@
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
 from split_settings.tools import include
 
-load_dotenv(os.path.join(Path(__file__).parent.parent.parent.absolute(), '.env'))
 
+# Определяем корневую папку проекта
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Получаем секретный ключ и определяем, в каком режиме запустить проект
 SECRET_KEY = os.environ.get("SECRET_KEY")
-DEBUG = os.environ.get("DEBUG", False)
+DEBUG = True if os.environ.get("DEBUG", False) == "True" else False
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
+if not DEBUG:
+    ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -67,6 +68,7 @@ include(
     'components/internalization.py',
 )
 
+# Status Files and media
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
@@ -77,12 +79,12 @@ INTERNAL_IPS = [
 ]
 
 # Sentry
-include(
-    'components/sentry.py',
-)
+#include(
+#    'components/sentry.py',
+#)
 
 
 # Loggining
-include(
-    'components/logger.py',
-)
+#include(
+#    'components/logger.py',
+#)

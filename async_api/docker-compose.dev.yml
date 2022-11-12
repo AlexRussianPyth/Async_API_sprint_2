@@ -3,14 +3,13 @@ version: '3'
 volumes:
   postgres_data:
   static_files:
-  sql:
 
 services:
   web:
     container_name: web-container
     build: ./service
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     volumes:
       - static_files:/opt/app/staticfiles
       - /tmp/logs/admin/json:/var/log/app

@@ -1,6 +1,5 @@
 django==3.2
 flake8==4.0
-python-dotenv==0.20.0
 django-split-settings==1.1.0
 django-debug-toolbar==3.4.0
 pytest==7.1.2
@@ -13,7 +12,6 @@ uwsgi==2.0.20
 elasticsearch==8.3.1
 pydantic==1.9.1
 psycopg2-binary
-python-dotenv==0.20.0
 django-log-request-id==2.0.0
 sentry-sdk==1.9.10
 ecs-logging==2.0.0

@@ -1,9 +1,5 @@
 import os
-import pathlib
 
-import dotenv
-
-dotenv.load_dotenv(os.path.join(pathlib.Path(__file__).parent.parent.parent.parent.absolute(), '.env'))
 
 DATABASES = {
     'default': {

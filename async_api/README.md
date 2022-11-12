@@ -10,7 +10,7 @@
 ```
     $ docker exec web-container python3 manage.py migrate
 ```
-5. Создайте суперюзера для админки в Джанго:
+5. Создайте суперюзера для админки в Джанго (Login: admin, pass: 123):
 ```
     $ docker exec web-container make superuser
 ```

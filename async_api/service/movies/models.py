@@ -78,6 +78,22 @@ class Filmwork(UUIDMixin, TimeStampedMixin):
         default=FilmTypes.MOVIE,
     )
 
+    class SubscriptionTypes(models.TextChoices):
+        """
+        Определяет набор вариантов подписки для Фильма.
+        Предполагается, что данный фильм может смотреть Юзер с данным вариантом подписки
+        """
+        GUEST = 'guest'
+        STANDART = 'standart'
+        PREMIUM = 'premium'
+
+    subscription = models.CharField(
+        "subscription",
+        max_length=10,
+        choices=SubscriptionTypes.choices,
+        default=SubscriptionTypes.GUEST,
+    )
+
     class Meta:
         db_table = "content\".\"film_work"
         verbose_name = _('Film Work')
