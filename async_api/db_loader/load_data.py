@@ -7,7 +7,7 @@ import psycopg2
 from db_settings import POSTGRE_SETTINGS, SQLITE_DB
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
-from transfer_to_psql import PostgresSaver, SQLiteLoader
+from services import PostgresSaverService, SQLiteLoaderService
 
 
 @contextmanager
@@ -19,8 +19,8 @@ def sqlite_conn_context_manager(db_path):
 
 
 def load_from_sqlite(connection: sqlite3.Connection, pg_conn: _connection):
-    sqlite_loader = SQLiteLoader(connection, batch_size=30)
-    postgres_saver = PostgresSaver(pg_conn)
+    sqlite_loader = SQLiteLoaderService(connection, batch_size=30)
+    postgres_saver = PostgresSaverService(pg_conn)
 
     postgres_saver.clear_all_data()
 

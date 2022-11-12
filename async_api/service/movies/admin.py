@@ -41,7 +41,7 @@ class PersonFilmworkInline(admin.StackedInline):
 @admin.register(Filmwork)
 class FilmworkAdmin(admin.ModelAdmin):
     inlines = (GenreFilmworkInline, PersonFilmworkInline)
-    list_display = ('title', 'type', 'get_genres', 'creation_date', 'rating', 'created', 'modified')
+    list_display = ('title', 'type', 'get_genres', 'creation_date', 'rating', 'created', 'modified', 'subscription')
     list_prefetch_related = ['genres']
 
     def get_queryset(self, request):

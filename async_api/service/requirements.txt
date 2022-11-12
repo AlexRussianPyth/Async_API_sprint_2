@@ -15,3 +15,4 @@ psycopg2-binary
 django-log-request-id==2.0.0
 sentry-sdk==1.9.10
 ecs-logging==2.0.0
+python-dotenv==0.21.0

@@ -11,6 +11,7 @@ class FilmWork:
     type: str
     created_at: str
     updated_at: str
+    subscription: str
     id: uuid.UUID = field(default_factory=uuid.uuid4)
     rating: float = field(default=0.0)
 

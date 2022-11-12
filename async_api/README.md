@@ -19,7 +19,7 @@
     $ docker exec -it web-container bash
     $ python3 manage.py collectstatic
 ```
-7. Опционально: Перелейте данные о фильмах из Sqlite3 в Postgre. 
+7. Опционально: Перелейте тестовые данные о фильмах из Sqlite3 в Postgre. 
 Для этого вам потребуется файл "docker-compose.dev.yml"
 ```
     $ docker-compose -f docker-compose.dev.yml up --build

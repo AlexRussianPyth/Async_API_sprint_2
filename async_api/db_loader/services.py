@@ -9,7 +9,7 @@ from psycopg2.extensions import connection as _connection
 from psycopg2.extras import execute_batch
 
 
-class SQLiteLoader:
+class SQLiteLoaderService:
     def __init__(self, sql_conn: sqlite3.Connection, batch_size: int):
         self.sql_conn = sql_conn
         self.batch_size = batch_size
@@ -77,7 +77,7 @@ class SQLiteLoader:
             yield {'type': 'genre_films_data', 'objects': genre_film_data}
 
 
-class PostgresSaver:
+class PostgresSaverService:
     def __init__(self, pg_conn: _connection):
         self.pg_conn = pg_conn
 
@@ -104,8 +104,8 @@ class PostgresSaver:
 
     def __save_film_work_to_db(self, film_work_data: List[FilmWork]):
         query = '''INSERT INTO content.film_work (id, title, description,
-                creation_date, rating, type, created, modified) VALUES
-                (%s, %s, %s, %s, %s, %s, %s, %s)'''
+                creation_date, rating, type, created, modified, subscription) VALUES
+                (%s, %s, %s, %s, %s, %s, %s, %s, %s)'''
 
         values = []
 
@@ -119,6 +119,7 @@ class PostgresSaver:
                 str(film.type),
                 self.date_checker(str(film.created_at)),
                 self.date_checker(str(film.updated_at)),
+                self.text_to_pg_format(str(film.subscription))
                 )
             values.append(value)
 
