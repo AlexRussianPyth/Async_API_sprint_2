@@ -79,12 +79,12 @@ INTERNAL_IPS = [
 ]
 
 # Sentry
-#include(
-#    'components/sentry.py',
-#)
+include(
+    'components/sentry.py',
+)
 
 
-# Loggining
-#include(
-#    'components/logger.py',
-#)
+# Logging
+include(
+    'components/logger.py',
+)

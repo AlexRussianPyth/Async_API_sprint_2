@@ -1,6 +1,5 @@
 import time
 from uuid import UUID
-import logging
 
 import jwt
 from fastapi import HTTPException, Request
@@ -42,9 +41,7 @@ class JWTBearer(HTTPBearer):
 
 def decodeJWT(token: str) -> dict:
     try:
-        logging.warning(f"Token: {token}")
         decoded_token = jwt.decode(token, api_settings.jwt_secret, algorithms=[api_settings.jwt_algorithm])
-        logging.warning(f"Decoded {decoded_token}")
         return decoded_token if decoded_token["exp"] >= time.time() else None
     except:
         return {}

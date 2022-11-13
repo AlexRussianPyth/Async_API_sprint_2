@@ -13,6 +13,8 @@ services:
       - /tmp/logs/admin/json:/var/log/app
     depends_on:
       - db
+    expose:
+      - "8000"
     env_file:
       - ./.env
 
@@ -33,7 +35,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./configs:/etc/nginx/conf.d:ro
-      - ./data:/data/:ro
+      - ./data:/data/
       - static_files:/home/app/staticfiles
       - /tmp/logs/nginx/:/var/log/nginx/json/
     depends_on:
@@ -82,12 +84,12 @@ services:
     ports:
       - 8002:8000
 
-        #  tests:
-        #    container_name: tests-container
-        #    build:
-        #      context: ./tests/functional/
-        #    entrypoint: >
-        #      sh -c "pip install --upgrade pip && pip install -r ./requirements.txt &&
-        #      python3 ./utils/wait_for_es.py && python3 ./utils/wait_for_redis.py && pytest ./src"
-        #    env_file:
-        #      - ./.env
+  tests:
+    container_name: tests-container
+    build:
+      context: ./tests/functional/
+    entrypoint: >
+      sh -c "pip install --upgrade pip && pip install -r ./requirements.txt &&
+      python3 ./utils/wait_for_es.py && python3 ./utils/wait_for_redis.py && pytest ./src"
+    env_file:
+      - ./.env

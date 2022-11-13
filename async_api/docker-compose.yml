@@ -19,10 +19,11 @@ services:
       - ./.env
 
   db:
-    container_name: database-container
+    container_name: movies-sql-db
     image: postgres:13.0-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      - ./sql/:/docker-entrypoint-initdb.d/
     env_file:
       - ./.env
 
@@ -34,7 +35,7 @@ services:
       - ./configs:/etc/nginx/conf.d:ro
       - ./data:/data/:ro
       - static_files:/home/app/staticfiles
-      - /tmp/logs/nginx/:/var/log/nginx/
+      - /tmp/logs/nginx/:/var/log/nginx/json/
     depends_on:
       - web
     ports:
