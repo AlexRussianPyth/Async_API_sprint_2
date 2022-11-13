@@ -6,7 +6,7 @@ from core.utils import ornate_ids
 
 
 class FilmExtractor:
-    """Получает из Postgre обновленные записи фильмов, людей, жанров, в то же время 
+    """Получает из Postgre обновленные записи фильмов, людей, жанров, в то же время
     обогащает их связанными данными"""
     def __init__(self, connection: _connection, state_manager):
         self.connection = connection
@@ -107,7 +107,7 @@ class FilmExtractor:
         return films
 
     @backoff()
-    def enrich_modified_films(self, modified_films: List[List]) -> List[List]:
+    def enrich_modified_films(self, modified_films: list[list]) -> list[list]:
 
         films_ids = [obj['id'] for obj in modified_films]
         id_string = ornate_ids(films_ids)
