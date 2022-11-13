@@ -29,6 +29,7 @@ class Film(MainModel):
     imdb_rating: float | None
     title: str
     description: str
+    subscription: str
     director: list[str] | None
     genre: list[str] | None
     actors: list[PersonShortInfo] | None

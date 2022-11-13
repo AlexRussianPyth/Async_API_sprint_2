@@ -3,6 +3,7 @@ import pathlib
 
 import dotenv
 
+
 dotenv.load_dotenv(os.path.join(pathlib.Path(__file__).parent.parent.absolute(), '.env'))
 
 DB_SCHEMA = os.environ.get('DB_SCHEMA')

@@ -33,6 +33,7 @@ class Film(BaseFilm):
     """Полный набор полей для эндпоинта с описанием одного фильма"""
     genre: list[str] | None
     description: str | None
+    subscription: str
     directors: list[str] | None
     actors: list[PersonShortInfo] | None
     writers: list[PersonShortInfo] | None

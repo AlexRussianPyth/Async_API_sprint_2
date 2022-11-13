@@ -8,24 +8,24 @@ services:
   web:
     container_name: web-container
     build: ./service
-    expose:
-      - "8000"
     volumes:
       - static_files:/opt/app/staticfiles
       - /tmp/logs/admin/json:/var/log/app
     depends_on:
       - db
+    expose:
+      - "8000"
     env_file:
       - ./.env
 
   db:
-    container_name: database-container
+    container_name: movies-sql-db
     image: postgres:13.0-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      - ./sql/:/docker-entrypoint-initdb.d/
     env_file:
       - ./.env
-    # Используется для загрузки данных из Sqlite3 в PostgreSQL, а также для ETL
     ports:
       - "5432:5432"
 
@@ -35,9 +35,9 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./configs:/etc/nginx/conf.d:ro
-      - ./data:/data/:ro
+      - ./data:/data/
       - static_files:/home/app/staticfiles
-      - /tmp/logs/nginx/:/var/log/nginx/
+      - /tmp/logs/nginx/:/var/log/nginx/json/
     depends_on:
       - web
     ports:

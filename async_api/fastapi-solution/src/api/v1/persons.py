@@ -115,6 +115,7 @@ async def films_by_person(
                 title=film.title,
                 imdb_rating=film.imdb_rating,
                 description=film.description,
+                subscription=film.subscription, 
                 directors=film.director,
                 genre=film.genre,
                 actors=film.actors,

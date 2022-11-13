@@ -5,17 +5,12 @@
 ```
     $ docker-compose up --build
 ```
-3. Откройте контейнер с БД и создайте схему 'content':
-```
-    $ docker exec -it database-container bash
-    $ psql -U app -d movies_database
-    $ CREATE SCHEMA IF NOT EXISTS content;
-```
+3. Схема "content" в нашей БД будет создана автоматически при первом запуске docker-compose.
 4. Мигрируйте модели в Джанго:
 ```
     $ docker exec web-container python3 manage.py migrate
 ```
-5. Создайте суперюзера для админки в Джанго:
+5. Создайте суперюзера для админки в Джанго (Login: admin, pass: 123):
 ```
     $ docker exec web-container make superuser
 ```
@@ -24,7 +19,7 @@
     $ docker exec -it web-container bash
     $ python3 manage.py collectstatic
 ```
-7. Опционально: Перелейте данные о фильмах из Sqlite3 в Postgre. 
+7. Опционально: Перелейте тестовые данные о фильмах из Sqlite3 в Postgre. 
 Для этого вам потребуется файл "docker-compose.dev.yml"
 ```
     $ docker-compose -f docker-compose.dev.yml up --build

@@ -1,4 +1,4 @@
-from validation import EsFilmwork, EsGenre, EsPerson
+from models.validation import EsFilmwork, EsGenre, EsPerson
 
 
 def transform_film_record(records: list) -> list[EsFilmwork]:
@@ -31,6 +31,7 @@ def transform_film_record(records: list) -> list[EsFilmwork]:
             "genre": record['genre'],
             "title": record['title'],
             "description": record['description'],
+            "subscription": record['subscription'],
             "director": record['director'] if record['director'] is not None else [],
             "actors_names": record['actors_names'],
             "writers_names": record['writers_names'],

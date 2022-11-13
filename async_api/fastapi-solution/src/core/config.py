@@ -44,6 +44,7 @@ class SentrySettings(MainSettings):
     sentry_dsn: str
     sentry_traces_sample_rate: float = 1.0
 
+
 db_settings = DatabaseSettings()
 cache_settings = CacheSettings()
 api_settings = ApiSettings()
